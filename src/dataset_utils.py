@@ -162,20 +162,26 @@ class ProductsDataset(Dataset):
             image = self.transform(image=image)['image']
         return {'pixel_values': image, 'label': category}
 
-def create_image_datasets(preprocessed_dataset: pd.DataFrame()):
+def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(), 
+                          preprocessed_dataset_pred: pd.DataFrame()):
     """
-    create pytorch datasets: train and valid
+    create pytorch datasets: train, valid and predict
 
     Parameters
     ----------
-        preprocessed_dataset (pd.DataFrame()): 
-            dataframe with all content inside
+        preprocessed_dataset_train (pd.DataFrame()): 
+            train dataframe with all content inside
+        
+        preprocessed_dataset_predict (pd.DataFrame()): 
+            predict dataframe with all content inside
         
     Return
     ------
-        train_dataset (ProductsDataset): 
+        train_dataset (ProductsDataset) 
 
-        valid_dataset (ProductsDataset):    
+        valid_dataset (ProductsDataset)   
+
+        pred_dataset (ProductsDataset)
     """
 
     train_transform = A.Compose([
@@ -200,9 +206,9 @@ def create_image_datasets(preprocessed_dataset: pd.DataFrame()):
 
     # To make it easier for the model to get the label name from the label id, 
     # create a dictionary that maps the label name to an integer and vice versa
-    label2id, id2label = create_labels_mapping(preprocessed_dataset)
+    label2id, id2label = create_labels_mapping(preprocessed_dataset_train)
 
-    train_df, valid_df = train_test_split(preprocessed_dataset, test_size=0.2, 
+    train_df, valid_df = train_test_split(preprocessed_dataset_train, test_size=0.2, 
                                           random_state=MAGIC_SEED)
 
     print('len train split:', len(train_df))
@@ -210,12 +216,15 @@ def create_image_datasets(preprocessed_dataset: pd.DataFrame()):
 
     train_labels = [torch.tensor(int(label2id[l])) for l in train_df['category_id']]
     valid_labels = [torch.tensor(int(label2id[l])) for l in valid_df['category_id']]
+    pred_labels = [torch.tensor(0) for i in range(len(preprocessed_dataset_pred))]
 
     trainset = list(zip(train_df['path'], train_labels))
     validset = list(zip(valid_df['path'], valid_labels))
+    predset = list(zip(preprocessed_dataset_pred['path'], pred_labels))
 
     train_dataset = ProductsDataset(trainset, train_transform)
     valid_dataset = ProductsDataset(validset, test_transform)
+    pred_dataset = ProductsDataset(predset, test_transform)
 
-    return train_dataset, valid_dataset, label2id, id2label
+    return train_dataset, valid_dataset, pred_dataset, label2id, id2label
     
