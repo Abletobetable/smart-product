@@ -217,14 +217,5 @@ def create_image_datasets(preprocessed_dataset: pd.DataFrame()):
     train_dataset = ProductsDataset(trainset, train_transform)
     valid_dataset = ProductsDataset(validset, test_transform)
 
-    return train_dataset, valid_dataset
-
-
-
-
-
-
-
-
-
-
+    return train_dataset, valid_dataset, label2id, id2label
+    
