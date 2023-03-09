@@ -3,6 +3,7 @@ functions for initialisation model and trainer
 """
 
 import numpy as np
+from tqdm import tqdm
 
 from transformers import BeitImageProcessor, BeitForImageClassification
 from transformers import TrainingArguments, Trainer, DefaultDataCollator
@@ -10,6 +11,7 @@ from transformers import TrainingArguments, Trainer, DefaultDataCollator
 from datasets import load_metric
 
 import torch.nn as nn
+from torch.utils.data import DataLoader
 
 
 def compute_metrics(eval_pred):
@@ -91,6 +93,39 @@ def create_model_and_trainer(model_checkpoint: str,
 
     return model, trainer
 
+def get_images_features(dataset, model, device: str) -> np.ndarray():
+    """
+    get features for image dataset from model provided
+
+        Parameters
+    ----------
+        dataset : 
+            dataset with images
+
+        model : 
+            model with weights
+        
+        device (str):
+            cpu or gpu use for extraction
+
+    Return
+    ------
+        X (np.ndarray()): array with features
+    """
+    loader = DataLoader(dataset, batch_size=1,
+                        shuffle=False, num_workers=2)
+
+    model.to(device)
+
+    X = np.zeros((len(dataset), 768))
+
+    # train 
+    for i, batch in enumerate(tqdm(loader)):
+
+        # beit output: last_hidden_state, pooler_output
+        X[i, :] = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
+
+    return X
 
 
 
