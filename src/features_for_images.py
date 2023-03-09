@@ -10,6 +10,7 @@ from transformers import TrainingArguments, Trainer, DefaultDataCollator
 
 from datasets import load_metric
 
+import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
@@ -48,8 +49,8 @@ def create_model_and_trainer(model_checkpoint: str,
         trainer
     """
 
-    processor = BeitImageProcessor.from_pretrained('microsoft/beit-base-patch16-224-pt22k-ft22k')
-    model = BeitForImageClassification.from_pretrained('microsoft/beit-base-patch16-224-pt22k-ft22k', 
+    processor = BeitImageProcessor.from_pretrained(model_checkpoint)
+    model = BeitForImageClassification.from_pretrained(model_checkpoint, 
                                                     num_labels=num_labels,
                                                     id2label=id2label,
                                                     label2id=label2id,
@@ -93,7 +94,7 @@ def create_model_and_trainer(model_checkpoint: str,
 
     return model, trainer
 
-def get_images_features(dataset, model, device: str) -> np.ndarray():
+def get_image_features(dataset, model, device: str) -> np.ndarray:
     """
     get features for image dataset from model provided
 
@@ -119,11 +120,13 @@ def get_images_features(dataset, model, device: str) -> np.ndarray():
 
     X = np.zeros((len(dataset), 768))
 
-    # train 
+    model.eval()
     for i, batch in enumerate(tqdm(loader)):
 
-        # beit output: last_hidden_state, pooler_output
-        X[i, :] = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
+        with torch.no_grad():
+
+            # beit output: last_hidden_state, pooler_output
+            X[i, :] = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
 
     return X
 
