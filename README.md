@@ -6,13 +6,11 @@ Predict category of product by it's description, image and other attributes
 1. get features from every possible source(column in df)
 
     1.1. feature extractor for images
-(train some algorithm for predicting category only by it's image)
 
     1.2. feature extractor for descriptions and others text fields
-(train some algorithm for predicting category only by it's text field)
 
     1.3. get embedding for shop title
-(train word2vec algorithm)
+(word2vec algorithm)
 
 2. metric learning on every block of features for better separation between classes
 
