@@ -6,6 +6,8 @@ Predict category of product by it's description, image and other attributes
 
     try undersampling or oversampling techniques
     
+    or use metric learning for better separation between classes
+    
 - beit alone can't classify categories:
 
     try CNN, for example or use image features in combination with others
