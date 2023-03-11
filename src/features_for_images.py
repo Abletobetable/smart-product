@@ -97,7 +97,7 @@ def create_model_and_trainer(model_checkpoint: str,
 
 def get_image_features(dataset, model, device: str, 
                        product_id: pd.Series(), 
-                       category_id: pd.Series()) -> np.ndarray:
+                       category_id: pd.Series() = None) -> np.ndarray:
     """
     get features for image dataset from model provided
 
@@ -130,7 +130,13 @@ def get_image_features(dataset, model, device: str,
 
     model.to(device)
 
-    X = np.zeros((len(dataset), 768))
+    if category_id is not None:
+        X = np.zeros((len(dataset), 768+2))
+        X[:, 0] = category_id.to_list()
+        X[:, 1] = product_id.to_list()
+    else:
+        X = np.zeros((len(dataset), 768+1))
+        X[:, 0] = product_id.to_list()
 
     model.eval()
     for i, batch in enumerate(tqdm(loader)):
@@ -138,7 +144,10 @@ def get_image_features(dataset, model, device: str,
         with torch.no_grad():
 
             # beit output: last_hidden_state, pooler_output
-            X[i, :] = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
+            if category_id is not None:
+                X[i, 2:] = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
+            else:
+                X[i, 1:] = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
 
     return X
 
