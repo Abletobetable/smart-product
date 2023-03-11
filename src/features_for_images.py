@@ -3,6 +3,7 @@ functions for initialisation model and trainer
 """
 
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 from transformers import BeitImageProcessor, BeitForImageClassification
@@ -94,7 +95,9 @@ def create_model_and_trainer(model_checkpoint: str,
 
     return model, trainer
 
-def get_image_features(dataset, model, device: str) -> np.ndarray:
+def get_image_features(dataset, model, device: str, 
+                       product_id: pd.Series(), 
+                       category_id: pd.Series()) -> np.ndarray:
     """
     get features for image dataset from model provided
 
@@ -109,9 +112,18 @@ def get_image_features(dataset, model, device: str) -> np.ndarray:
         device (str):
             cpu or gpu use for extraction
 
+        product_id (pd.Series()):
+            Series of product ids in dataset
+
+        category_id (pd.Series()):
+            Series of category ids of products in dataset
+
     Return
     ------
-        X (np.ndarray()): array with features
+        X (np.ndarray()): array with features 
+        and
+        1 column: product ids
+        2 column: category ids
     """
     loader = DataLoader(dataset, batch_size=1,
                         shuffle=False, num_workers=2)
