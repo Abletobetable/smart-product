@@ -2,6 +2,7 @@
 functions for initialisation model and trainer 
 """
 
+from typing import Literal
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -97,7 +98,8 @@ def create_model_and_trainer(model_checkpoint: str,
 
 def get_image_features(dataset, model, device: str, 
                        product_id: pd.Series(), 
-                       category_id: pd.Series() = None) -> np.ndarray:
+                       category_id: pd.Series() = None, 
+                       model_type: Literal['ViT', 'CNN'] = 'ViT') -> np.ndarray:
     """
     get features for image dataset from model provided
 
@@ -117,6 +119,9 @@ def get_image_features(dataset, model, device: str,
 
         category_id (pd.Series()):
             Series of category ids of products in dataset
+            
+        model_type (['ViT', 'CNN']):
+            set model for feature extraction
 
     Return
     ------
@@ -130,12 +135,20 @@ def get_image_features(dataset, model, device: str,
 
     model.to(device)
 
+    if model_type == 'ViT':
+        num_features = 768
+        print('Using ViT for feature extraction')
+    else:
+        num_features = 1536
+        print('Using CNN for feature extraction')
+
+    # in predict dataset we dont have category_id column
     if category_id is not None:
-        X = np.zeros((len(dataset), 768+2))
+        X = np.zeros((len(dataset), num_features+2))
         X[:, 0] = category_id.to_list()
         X[:, 1] = product_id.to_list()
     else:
-        X = np.zeros((len(dataset), 768+1))
+        X = np.zeros((len(dataset), num_features+1))
         X[:, 0] = product_id.to_list()
 
     model.eval()
@@ -143,11 +156,24 @@ def get_image_features(dataset, model, device: str,
 
         with torch.no_grad():
 
-            # beit output: last_hidden_state, pooler_output
-            if category_id is not None:
-                X[i, 2:] = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
-            else:
-                X[i, 1:] = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
+            if model_type == 'ViT': # use transformer forward method
+
+                output = model.beit(batch['pixel_values'].to(device)).pooler_output.cpu()
+
+                if category_id is not None:
+                    X[i, 2:] = output
+                else:
+                    X[i, 1:] = output
+
+            else: # use timm forward method
+
+                unpooled = model.forward_features(batch['pixel_values'].to(device))
+                output = model.forward_head(unpooled, pre_logits=True).cpu()
+
+                if category_id is not None:
+                    X[i, 2:] = output
+                else:
+                    X[i, 1:] = output
 
     return X
 

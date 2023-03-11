@@ -62,7 +62,9 @@ def expand_text_fields(df: pd.DataFrame()) -> pd.DataFrame():
 
     return new_df
 
-def add_images_path(path_df: pd.DataFrame(), expanded_df: pd.DataFrame(), split: Literal['train', 'test']) -> pd.DataFrame():
+def add_images_path(path_df: pd.DataFrame(), 
+                    expanded_df: pd.DataFrame(), 
+                    split: Literal['train', 'test']) -> pd.DataFrame():
     """
     add to dataframe path to images
     inside: get path with os.listdir() and then pd.merge()
@@ -108,7 +110,8 @@ def add_images_path(path_df: pd.DataFrame(), expanded_df: pd.DataFrame(), split:
 
 def create_labels_mapping(preprocessed_dataset: pd.DataFrame()) -> dict():
     """
-    create label2id and id2label dicts for mapping between categories and labels
+    create label2id and id2label dicts 
+    for mapping between categories and labels
 
     Parameters
     ----------
