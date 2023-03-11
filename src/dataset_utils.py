@@ -177,11 +177,18 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
         
     Return
     ------
-        train_dataset (ProductsDataset) 
 
-        valid_dataset (ProductsDataset)   
+        dataset (ProductsDataset): 
+            unsplitted version of dataset
 
-        pred_dataset (ProductsDataset)
+        train_dataset (ProductsDataset):
+            train split
+
+        valid_dataset (ProductsDataset):
+            valid split   
+
+        pred_dataset (ProductsDataset):
+            part of dataset for prediction
     """
 
     train_transform = A.Compose([
@@ -208,12 +215,19 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
     # create a dictionary that maps the label name to an integer and vice versa
     label2id, id2label = create_labels_mapping(preprocessed_dataset_train)
 
+    # train / valid split
     train_df, valid_df = train_test_split(preprocessed_dataset_train, test_size=0.2, 
                                           random_state=MAGIC_SEED)
 
     print('len train split:', len(train_df))
     print('len valid split:', len(valid_df))
 
+    # unsplitted dataset
+    unsplitted_labels = [torch.tensor(int(label2id[l])) for l in preprocessed_dataset_train['category_id']]
+    unsplitted_set = list(zip(preprocessed_dataset_train['path'], unsplitted_labels))
+    unsplitted_dataset = ProductsDataset(unsplitted_set, test_transform)
+
+    # splitted datasets
     train_labels = [torch.tensor(int(label2id[l])) for l in train_df['category_id']]
     valid_labels = [torch.tensor(int(label2id[l])) for l in valid_df['category_id']]
     pred_labels = [torch.tensor(0) for i in range(len(preprocessed_dataset_pred))]
@@ -226,5 +240,5 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
     valid_dataset = ProductsDataset(validset, test_transform)
     pred_dataset = ProductsDataset(predset, test_transform)
 
-    return train_dataset, valid_dataset, pred_dataset, label2id, id2label
+    return unsplitted_dataset, train_dataset, valid_dataset, pred_dataset, label2id, id2label
     
