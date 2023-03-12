@@ -29,7 +29,7 @@ def create_average_navec_embed(
     tokenizer = nltk.WordPunctTokenizer()
 
     # main loop
-    for i, title, cat, prod in enumerate(tqdm(list(zip(sentences, 
+    for i, (title, cat, prod) in enumerate(tqdm(list(zip(sentences, 
                                                        category_ids, 
                                                        product_ids)))):
 
