@@ -1,5 +1,16 @@
+"""
+functions for train, test and log
+"""
+
+import os
+import pprint
+import numpy as np
 from tqdm.notebook import tqdm
+
 from sklearn.metrics import f1_score
+
+import torch
+from torch.optim.lr_scheduler import StepLR
 
 def trainer(model, train_loader, valid_loader, loss_function, 
             optimizer, scheduler, cfg):
@@ -218,13 +229,38 @@ def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, min_val_loss):
     print(f'valid loss on {str(epoch).zfill(3)} epoch: {valid_loss:.6f}')
     print(f'valid accuracy: {valid_f1:.2f}')
 
-from torch.optim.lr_scheduler import StepLR
-
-import pprint
-
-def pipeline(model, cfg, saved_model=None, to_train=True, to_test=True):
+def pipeline(model, train_dataset, valid_dataset, 
+             cfg, saved_model=None, to_train=True, to_test=True):
     """
     run training and/or testing process
+
+    Parameters
+    ----------
+        model:
+            model for traning and/ot testing
+
+        train_dataset:
+            dataset for trainig
+
+        test_dataset:
+            dataset for testing or validating
+
+        cdf (dict()):
+            config with params for training and testing
+
+        saved_model:
+            path to saved checkpoint to resume training
+            or to test saved model
+        
+        to_train (bool):
+            if True train, else only test
+
+        to_test (bool):
+            if True test, else only train
+
+    Return
+    ------
+        trained or tested model
     """
 
     def build_model(model, cfg, saved_model=None):
@@ -240,7 +276,7 @@ def pipeline(model, cfg, saved_model=None, to_train=True, to_test=True):
 
         return model
 
-    def make(model, cfg):
+    def make(model, train_dataset, valid_dataset, cfg):
         """
         make dataloaders, init optimizers and criterions
         """
@@ -264,7 +300,8 @@ def pipeline(model, cfg, saved_model=None, to_train=True, to_test=True):
 
     # data and optimization 
     trainloader, validloader,  \
-        criterion, optimizer, scheduler = make(model, cfg)
+        criterion, optimizer, scheduler = make(model, train_dataset, 
+                                               valid_dataset, cfg)
 
     print('config:')
     pretty_print.pprint(cfg)
