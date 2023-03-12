@@ -34,3 +34,7 @@ Predict category of product by it's description, image and other attributes
 - add metric learning for features
     
     so pipeline will be: pretrained_model -> metric-learm model -> final classifier
+    
+- apply adapters: 
+
+    for efficient fine-tuning of big (large) models adapters may be great solution
