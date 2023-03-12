@@ -55,7 +55,7 @@ def trainer(model, train_loader, valid_loader, loss_function,
             learning rate scheduler for optimizer
     """
 
-    if cfg['report_to'] is 'wandb':
+    if cfg['report_to'] == 'wandb':
         wandb.watch(model, loss_function, log="all", log_freq=10)
 
     min_valid_loss = np.inf
@@ -89,7 +89,7 @@ def trainer(model, train_loader, valid_loader, loss_function,
 
         # log things
         trainer_log(epoch_loss, valid_loss, valid_f1, e, 
-                    optimizer.param_groups[0]['lr'], min_valid_loss)
+                    optimizer.param_groups[0]['lr'], min_valid_loss, cfg)
 
         # saving models
         if min_valid_loss > valid_loss:
@@ -97,7 +97,7 @@ def trainer(model, train_loader, valid_loader, loss_function,
             min_valid_loss = valid_loss
             torch.save(model.state_dict(), 
                        f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth')
-            if cfg['report_to'] is 'wandb':
+            if cfg['report_to'] == 'wandb':
                 wandb.log_artifact(f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth', 
                                    name=f'saved_model_{e}', type='model')
         print()
@@ -231,13 +231,14 @@ def tester(model, test_loader, loss_function = None, print_stats=False, device='
     else:
         return F1
 
-def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, min_val_loss):
+def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, min_val_loss, cfg):
 
-    wandb.log({'train_loss': train_loss, 
-               'valid_loss': valid_loss,
-               'valid_f1': valid_f1, 
-               'epoch': epoch, 
-               'learning_rate': lr})
+    if cfg['report_to'] == 'wandb':
+        wandb.log({'train_loss': train_loss, 
+                   'valid_loss': valid_loss,
+                   'valid_f1': valid_f1, 
+                   'epoch': epoch, 
+                   'learning_rate': lr})
 
     print(f'train loss on {str(epoch).zfill(3)} epoch: {train_loss:.6f} with lr: {lr:.10f}')
     print(f'valid loss on {str(epoch).zfill(3)} epoch: {valid_loss:.6f}')
@@ -310,7 +311,7 @@ def image_pipeline(model, train_dataset, valid_dataset, cfg,
         
         return trainloader, validloader, criterion, optimizer, scheduler
 
-    if report_to is 'wandb':
+    if report_to == 'wandb':
         run = wandb.init(project=cfg['project'], config=cfg)
         cfg['report_to'] = 'wandb'
 
