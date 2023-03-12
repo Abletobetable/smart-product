@@ -6,6 +6,7 @@ couple dataset functions for preprocessing
 import os
 import cv2
 import json
+import numpy as np
 import pandas as pd
 from typing import Literal
 
@@ -180,7 +181,6 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
         
     Return
     ------
-
         dataset (ProductsDataset): 
             unsplitted version of dataset
 
@@ -244,4 +244,41 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
     pred_dataset = ProductsDataset(predset, test_transform)
 
     return unsplitted_dataset, train_dataset, valid_dataset, pred_dataset, label2id, id2label
+
+def stratified_train_test_split(X_train: np.array()) -> np.array():
+    """
+    duplicate single objects for stratified split
+    after duplicating apply train_test_split from sklearn
+
+    Parameters
+    ----------
+        X_train (np.array()):
+            dataset to perfome splitting
+
+    Return
+    ------
+        X_train_splitted, X_valid_splitted (np.array())
+    """
     
+    # get category_id
+    categories = pd.Series(X_train[:, 0])
+
+    # count unpopular values
+    cat_count = pd.DataFrame(categories.value_counts(), columns=['count'])
+    unpopular_products = list(cat_count[cat_count['count'] == 1].index)
+    print('rare products:', unpopular_products)
+
+    # duplicate
+    X_duplicated = X_train
+    for product in unpopular_products:
+        new_row = X_train[np.where(X_train == product)[0][0], :].reshape(1, -1)
+        X_duplicated = np.concatenate((X_duplicated, new_row), axis=0)
+
+    X_train_splitted, X_valid_splitted = train_test_split(X_duplicated, 
+                                            test_size=0.2, 
+                                            random_state=MAGIC_SEED, 
+                                            stratify=X_duplicated[:, 0])
+                                        
+    return X_train_splitted, X_valid_splitted
+
+
