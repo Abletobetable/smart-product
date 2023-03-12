@@ -278,7 +278,10 @@ def stratified_train_test_split(X_train: np.array) -> np.array:
                                             test_size=0.2, 
                                             random_state=MAGIC_SEED, 
                                             stratify=X_duplicated[:, 0])
+
+    X_train, y_train = X_train_splitted[:, 2:], X_train_splitted[:, 0]
+    X_valid, y_valid = X_valid_splitted[:, 2:], X_valid_splitted[:, 0]
                                         
-    return X_train_splitted, X_valid_splitted
+    return X_train, y_train, X_valid, y_valid
 
 
