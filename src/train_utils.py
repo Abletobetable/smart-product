@@ -5,9 +5,12 @@ functions for train, test and log
 import os
 import pprint
 import numpy as np
+from typing import Literal
 from tqdm.notebook import tqdm
 
 from sklearn.metrics import f1_score
+
+import wandb 
 
 import torch
 from torch.optim.lr_scheduler import StepLR
@@ -52,6 +55,9 @@ def trainer(model, train_loader, valid_loader, loss_function,
             learning rate scheduler for optimizer
     """
 
+    if cfg['report_to'] is 'wandb':
+        wandb.watch(model, loss_function, log="all", log_freq=10)
+
     min_valid_loss = np.inf
 
     # in this folder will save model weights
@@ -91,6 +97,9 @@ def trainer(model, train_loader, valid_loader, loss_function,
             min_valid_loss = valid_loss
             torch.save(model.state_dict(), 
                        f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth')
+            if cfg['report_to'] is 'wandb':
+                wandb.log_artifact(f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth', 
+                                   name=f'saved_model_{e}', type='model')
         print()
 
 def train_epoch(train_generator, model, 
@@ -223,14 +232,20 @@ def tester(model, test_loader, loss_function = None, print_stats=False, device='
         return F1
 
 def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, min_val_loss):
-    # train_losses.append(train_loss)
-    # valid_losses.append(valid_loss)
+
+    wandb.log({'train_loss': train_loss, 
+               'valid_loss': valid_loss,
+               'valid_f1': valid_f1, 
+               'epoch': epoch, 
+               'learning_rate': lr})
+
     print(f'train loss on {str(epoch).zfill(3)} epoch: {train_loss:.6f} with lr: {lr:.10f}')
     print(f'valid loss on {str(epoch).zfill(3)} epoch: {valid_loss:.6f}')
     print(f'valid accuracy: {valid_f1:.2f}')
 
-def pipeline(model, train_dataset, valid_dataset, 
-             cfg, saved_model=None, to_train=True, to_test=True):
+def image_pipeline(model, train_dataset, valid_dataset, cfg,
+             saved_model=None, to_train=True, to_test=True, 
+             report_to=Literal['local', 'wandb']):
     """
     run training and/or testing process
 
@@ -257,6 +272,9 @@ def pipeline(model, train_dataset, valid_dataset,
 
         to_test (bool):
             if True test, else only train
+
+        report_to ('local', 'wandb'):
+            where to log and save artifacts
 
     Return
     ------
@@ -291,6 +309,10 @@ def pipeline(model, train_dataset, valid_dataset,
         scheduler = StepLR(optimizer, cfg['step_size'], cfg['step_gamma'])
         
         return trainloader, validloader, criterion, optimizer, scheduler
+
+    if report_to is 'wandb':
+        run = wandb.init(project=cfg['project'], config=cfg)
+        cfg['report_to'] = 'wandb'
 
     # pretty print dict()
     pretty_print = pprint.PrettyPrinter()
