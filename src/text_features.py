@@ -13,7 +13,7 @@ def create_average_navec_embed(
     sentences: pd.Series(), 
     category_ids: pd.Series(), 
     product_ids: pd.Series() = None, 
-    split = Literal['train', 'test'] = 'train',
+    split: Literal['train', 'test'] = 'train',
 ) -> np.array:
     """
     get average embeddings for shop titles 
