@@ -245,7 +245,7 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
 
     return unsplitted_dataset, train_dataset, valid_dataset, pred_dataset, label2id, id2label
 
-def stratified_train_test_split(X_train: np.array()) -> np.array():
+def stratified_train_test_split(X_train: np.array) -> np.array:
     """
     duplicate single objects for stratified split
     after duplicating apply train_test_split from sklearn
