@@ -4,6 +4,7 @@ function for calculating text features
 
 import re
 import nltk
+import string
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -148,6 +149,54 @@ def filter_description(descriptions: pd.Series()) -> pd.Series():
 
     return pd.Series(filtered, name='description')
 
+def concatenate_text_fields(categories: pd.Series(), 
+                            prep_title: pd.Series(), 
+                            prep_attrib: pd.Series(), 
+                            prep_descrip: pd.Series()) -> pd.DataFrame():
+    
+    """
+    conctenate all text content using ". " between fields
 
+    Parameters
+    ----------
+        categories (pd.Series()): 
+            categories
+
+        prep_title (pd.Series()): 
+            titles
+
+        prep_attributes (pd.Series()): 
+            attributes
+
+        prep_descrip (pd.Series()): 
+            descriptions
+
+    Return
+    ------
+        concated_text (pd.Series()): 
+            dataframe with concated text content
+    """
+
+    concat = []
+
+    for (t, a, d) in list(zip(prep_title, prep_attrib, prep_descrip)):
+
+        if t[-1] not in string.punctuation:
+            text = t + ". " + a
+        else:
+            text = t + " " + a
+
+        if a[-1] not in string.punctuation:
+            text += ". " + d
+        else:
+            text += " " + d
+
+        if d[-1] not in string.punctuation:
+            text += "."
+
+        concat.append(text)
+
+    return pd.DataFrame({'category_id': categories, 
+                         'text': concat})
 
 
