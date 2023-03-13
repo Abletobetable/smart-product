@@ -19,6 +19,28 @@ def create_average_navec_embed(
     """
     get average embeddings for shop titles 
     from pretrained navec embdeddings
+
+    Parameters
+    ----------
+        navec_model: 
+            model with pretrained embeddings
+
+        sentences (pd.Series()): 
+            iterable with sentences to perfome average embeddings
+
+        category_ids (pd.Series()): 
+            iterable with categories
+        
+        product_ids (pd.Series()): 
+            iterable with categories
+
+        split ('train', 'test'):
+            flag for function to know if there are categories in dataset
+
+    Return
+    ------
+        processed_attributes (pd.Series()): 
+            cleaned and processed attributes
     """
 
     if split == 'train':
@@ -94,7 +116,32 @@ def preprocess_attributes(attributes: pd.Series()) -> pd.Series():
 
     return pd.Series(processed_attributes, name='attributes')
 
+def filter_description(descriptions: pd.Series()) -> pd.Series(): 
+    """
+    filter using regular expressions description field
 
+    Parameters
+    ----------
+        descriptions (pd.Series()): 
+            iterable for parse and processing descriptions
+
+    Return
+    ------
+        processed_descriptions (pd.Series()): 
+            cleaned and processed descriptionas
+    """
+
+    filtered = []
+
+    # main loop
+    for text in tqdm(descriptions):
+
+        text = re.sub(r'<[^<>]+>', '', text)
+        text = re.sub(r'&[^;]+;', ';', text)
+
+        filtered.append(text)
+
+    return pd.Series(filtered, name='description')
 
 
 
