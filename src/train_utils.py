@@ -242,7 +242,7 @@ def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, min_val_loss, cfg):
 
     print(f'train loss on {str(epoch).zfill(3)} epoch: {train_loss:.6f} with lr: {lr:.10f}')
     print(f'valid loss on {str(epoch).zfill(3)} epoch: {valid_loss:.6f}')
-    print(f'valid accuracy: {valid_f1:.2f}')
+    print(f'valid f1 score: {valid_f1:.2f}')
 
 def image_pipeline(model, train_dataset, valid_dataset, cfg,
              saved_model=None, to_train=True, to_test=True, 
