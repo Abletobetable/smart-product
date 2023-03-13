@@ -373,6 +373,9 @@ def create_text_datasets(prep_train_dataset: pd.DataFrame(),
             mapping for getting label <-> id and vice versa
     """
 
+    # get label <-> id mapping
+    label2id, id2label = create_labels_mapping(prep_train_dataset)
+
     # replace labels
     prep_train_dataset['label'] = [label2id[categ] \
                                   for categ in prep_train_dataset['category_id']]
@@ -427,9 +430,6 @@ def create_text_datasets(prep_train_dataset: pd.DataFrame(),
     train_dataset.set_format('torch')
     valid_dataset.set_format('torch')
     predict_dataset.set_format('torch')
-    
-    # get label <-> id mapping
-    label2id, id2label = create_labels_mapping(prep_train_dataset)
 
     return unsplitted_dataset, train_dataset, valid_dataset, \
            predict_dataset, label2id, id2label
