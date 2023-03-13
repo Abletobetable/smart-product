@@ -309,14 +309,21 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
         X_train_splitted, X_valid_splitted (pd.DataFrame())
     """
     
-    # get category_id
-    categories = X_train['category_id']
+    try:
+        # get category_id
+        categories = X_train['category_id']
+        categ_column_name = 'category_id'
+
+    except:
+        # get category_id
+        categ_column_name = 'label'
+        categories = X_train[categ_column_name]
 
     # count unpopular values
     cat_count = pd.DataFrame(categories.value_counts())
 
     # get index = category
-    unpopular_categ = list(cat_count[cat_count['category_id'] == 1].index)
+    unpopular_categ = list(cat_count[cat_count[categ_column_name] == 1].index)
     print('rare categories:', unpopular_categ)
 
     # duplicate
@@ -324,7 +331,7 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
     for categ in unpopular_categ:
 
         # get row for duplicate
-        idx = X_train[X_train['category_id'] == categ].index[0]
+        idx = X_train[X_train[categ_column_name] == categ].index[0]
         new_row = X_train.iloc[idx, :].to_list()
 
         # append new row
@@ -333,7 +340,7 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
     X_train_splitted, X_valid_splitted = train_test_split(X_duplicated, 
                                             test_size=0.2, 
                                             random_state=MAGIC_SEED, 
-                                            stratify=X_duplicated['category_id'])
+                                            stratify=X_duplicated[categ_column_name])
                                         
     return X_train_splitted, X_valid_splitted
 
