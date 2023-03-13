@@ -186,12 +186,12 @@ def concatenate_text_fields(categories: pd.Series(),
         else:
             text = t + " " + a
 
-        if a[-1] not in string.punctuation:
+        if len(a) > 0 and a[-1] not in string.punctuation:
             text += ". " + d
         else:
             text += " " + d
 
-        if d[-1] not in string.punctuation:
+        if len(d) > 0 and d[-1] not in string.punctuation:
             text += "."
 
         concat.append(text)
