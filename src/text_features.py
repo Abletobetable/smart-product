@@ -155,7 +155,7 @@ def filter_description(descriptions: pd.Series()) -> pd.Series():
 
     return pd.Series(filtered, name='description')
 
-def concatenate_text_fields(categories: pd.Series(), 
+def concatenate_text_fields(categories: pd.DataFrame(), 
                             prep_title: pd.Series(), 
                             prep_attrib: pd.Series(), 
                             prep_descrip: pd.Series()) -> pd.DataFrame():
@@ -165,8 +165,8 @@ def concatenate_text_fields(categories: pd.Series(),
 
     Parameters
     ----------
-        categories (pd.Series()): 
-            categories
+        categories (pd.DataFrame()): 
+            categories ids and product ids(if train part)
 
         prep_title (pd.Series()): 
             titles
@@ -202,8 +202,10 @@ def concatenate_text_fields(categories: pd.Series(),
 
         concat.append(text)
 
-    return pd.DataFrame({'category_id': categories, 
-                         'text': concat})
+    concated_text = pd.DataFrame(categories)
+    concated_text['text'] = concat
+
+    return concated_text
 
 def compute_metrics(eval_pred):
 
