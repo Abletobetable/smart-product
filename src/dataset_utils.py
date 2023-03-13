@@ -377,7 +377,7 @@ def create_text_datasets(prep_train_dataset: pd.DataFrame(),
     label2id, id2label = create_labels_mapping(prep_train_dataset)
 
     # replace labels
-    prep_train_dataset['label'] = [label2id[categ] \
+    prep_train_dataset['label'] = [torch.tensor(int(label2id[categ])) \
                                   for categ in prep_train_dataset['category_id']]
 
     # split
