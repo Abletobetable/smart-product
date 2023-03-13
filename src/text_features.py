@@ -136,8 +136,13 @@ def filter_description(descriptions: pd.Series()) -> pd.Series():
     # main loop
     for text in tqdm(descriptions):
 
-        text = re.sub(r'<[^<>]+>', '', text)
-        text = re.sub(r'&[^;]+;', ';', text)
+        if len(str(text)) > 3: # so not including nan values
+
+            text = re.sub(r'<[^<>]+>', '', text)
+            text = re.sub(r'&[^;]+;', ';', text)
+
+        else:
+            text = ''
 
         filtered.append(text)
 
