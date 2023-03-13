@@ -390,28 +390,32 @@ def create_text_datasets(prep_train_dataset: pd.DataFrame(),
     train_dataset = train_dataset.map(lambda examples: tokenizer(
         examples["text"], 
         padding="max_length", 
-        max_length=512), batched=True
+        max_length=512, 
+        truncation=True), batched=True
     )
         
     # validation split
     valid_dataset = valid_dataset.map(lambda examples: tokenizer(
         examples["text"], 
         padding="max_length", 
-        max_length=512), batched=True
+        max_length=512, 
+        truncation=True), batched=True
     )
 
     # unsplitted
     unsplitted_dataset = unsplitted_dataset.map(lambda examples: tokenizer(
         examples["text"], 
         padding="max_length", 
-        max_length=512), batched=True
+        max_length=512, 
+        truncation=True), batched=True
     )
 
     # predict
     predict_dataset = predict_dataset.map(lambda examples: tokenizer(
         examples["text"], 
         padding="max_length", 
-        max_length=512), batched=True
+        max_length=512, 
+        truncation=True), batched=True
     )
     
     # get label <-> id mapping
