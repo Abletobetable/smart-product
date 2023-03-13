@@ -220,7 +220,8 @@ def create_model_and_trainer(model_checkpoint: str,
                              num_epochs: int, batch_size: int,
                              freeze: bool, num_labels: int, 
                              label2id: dict(), id2label: dict(), 
-                             report_to: Literal['wandb', 'local']):
+                             report_to: Literal['wandb', 'local'], 
+                             push_to_hub: bool):
     """
     1. init model for training from model_checkpoint
 
@@ -234,6 +235,10 @@ def create_model_and_trainer(model_checkpoint: str,
         freeze (bool):
             if True, set require_grad = False in feature_extraction layers, 
             only classifier module will train
+
+        push_to_hub (bool):
+            if need to push model on huggingface model hub
+            (must be logined in huggingface-cli)
 
     Return
     ------
@@ -267,7 +272,7 @@ def create_model_and_trainer(model_checkpoint: str,
         num_train_epochs=num_epochs,
         warmup_ratio=0.1,
         logging_steps=10,
-        push_to_hub=True,
+        push_to_hub=push_to_hub,
         report_to=report_to
     )
 
