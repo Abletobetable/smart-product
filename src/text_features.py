@@ -1,7 +1,8 @@
 """
-function for clculating text features
+function for calculating text features
 """
 
+import re
 import nltk
 import numpy as np
 import pandas as pd
@@ -56,6 +57,42 @@ def create_average_navec_embed(
             X[i, 1:] = embed
 
     return X
+
+def preprocess_attributes(attributes: pd.Series()) -> pd.Series():
+    """
+    parse attributes column and preprocess it
+
+    Parameters
+    ----------
+        attributes (pd.Series()): 
+            iterable for parse and processing attributes
+
+    Return
+    ------
+        processed_attributes (pd.Series()): 
+            cleaned and processed attributes
+    """
+
+    processed_attributes = []
+
+    # main loop
+    for text in tqdm(attributes):
+        
+        if len(text) > 2: # means string not empty
+
+            # cleaning list
+            lst = text.strip('][').split(', ')
+            lst = [re.sub("'", "", elem.strip()) for elem in lst]
+
+            # join in meaningful string
+            string = ', '.join(lst)
+        
+        else:
+            string = ''
+
+        processed_attributes.append(string)
+
+    return pd.Series(processed_attributes, name='attributes')
 
 
 
