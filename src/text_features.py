@@ -267,7 +267,7 @@ def create_model_and_trainer(model_checkpoint: str,
         num_train_epochs=num_epochs,
         warmup_ratio=0.1,
         logging_steps=10,
-        push_to_hub=False,
+        push_to_hub=True,
         report_to=report_to
     )
 
