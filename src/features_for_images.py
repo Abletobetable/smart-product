@@ -39,7 +39,7 @@ def create_model_and_trainer(model_checkpoint: str,
     Parameters
     ----------
         model_checkpoint (str): 
-            repo in huggingface hub with model an processor
+            repo in huggingface hub with model and tokenizer
         
         freeze (bool):
             if True, set require_grad = False in feature_extraction layers, 

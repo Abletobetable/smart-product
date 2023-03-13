@@ -10,6 +10,12 @@ import pandas as pd
 from tqdm import tqdm
 from typing import Literal
 
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import DataCollatorWithPadding
+from transformers import TrainingArguments, Trainer
+
+from datasets import load_metric
+
 def create_average_navec_embed(
     navec_model, 
     sentences: pd.Series(), 
@@ -199,4 +205,78 @@ def concatenate_text_fields(categories: pd.Series(),
     return pd.DataFrame({'category_id': categories, 
                          'text': concat})
 
+def compute_metrics(eval_pred):
 
+    metric = load_metric('f1')
+
+    predictions, labels = eval_pred
+    predictions = np.argmax(predictions, axis=1)
+    return metric.compute(predictions=predictions, references=labels, average='weighted')
+
+def create_model_and_trainer(model_checkpoint: str, 
+                             train_dataset, valid_dataset, 
+                             num_epochs: int, batch_size: int,
+                             freeze: bool, num_labels: int, 
+                             label2id: dict(), id2label: dict(), 
+                             report_to: Literal['wandb', 'local']):
+    """
+    1. init model for training from model_checkpoint
+
+    2. init trainer with datasets and other params
+
+    Parameters
+    ----------
+        model_checkpoint (str): 
+            repo in huggingface hub with model, tokinzer abd config
+        
+        freeze (bool):
+            if True, set require_grad = False in feature_extraction layers, 
+            only classifier module will train
+
+    Return
+    ------
+        model
+
+        trainer
+    """
+
+    tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
+    model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, 
+                                                    num_labels=num_labels,
+                                                    id2label=id2label,
+                                                    label2id=label2id,)
+
+    # freeze feature extractor params 
+    # (only classifier are trainable)
+    if freeze:
+        for param in model.bert.parameters():
+            param.requires_grad = False
+
+    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+
+    training_args = TrainingArguments(
+        output_dir="text_feature_extractor",
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        learning_rate=5e-5,
+        weight_decay=0.01,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
+        num_train_epochs=num_epochs,
+        warmup_ratio=0.1,
+        logging_steps=10,
+        push_to_hub=False,
+        report_to=report_to
+    )
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        eval_dataset=valid_dataset,
+        tokenizer=tokenizer,
+        data_collator=data_collator,
+        compute_metrics=compute_metrics,
+    )
+
+    return model, trainer

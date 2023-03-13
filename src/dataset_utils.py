@@ -109,14 +109,14 @@ def add_images_path(path_df: pd.DataFrame(),
 
     return new_df
 
-def create_labels_mapping(preprocessed_dataset: pd.DataFrame()) -> dict():
+def create_labels_mapping(dataset: pd.DataFrame()) -> dict():
     """
     create label2id and id2label dicts 
     for mapping between categories and labels
 
     Parameters
     ----------
-        preprocessed_dataset (pd.DataFrame()): 
+        dataset (pd.DataFrame()): 
             dataframe with all content inside
         
     Return
@@ -128,7 +128,7 @@ def create_labels_mapping(preprocessed_dataset: pd.DataFrame()) -> dict():
             id <-> label mapping
     """
 
-    labels = sorted(list(set(preprocessed_dataset['category_id'])))
+    labels = sorted(list(set(dataset['category_id'])))
     label2id, id2label = dict(), dict()
 
     for i, label in enumerate(labels):
