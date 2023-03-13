@@ -29,7 +29,8 @@ def create_model_and_trainer(model_checkpoint: str,
                              train_dataset, valid_dataset, 
                              num_epochs: int, batch_size: int,
                              freeze: bool, num_labels: int, 
-                             label2id: dict(), id2label: dict()):
+                             label2id: dict(), id2label: dict(), 
+                             report_to: Literal['wandb', 'local']):
     """
     1. init model for training from model_checkpoint
 
@@ -82,6 +83,7 @@ def create_model_and_trainer(model_checkpoint: str,
         warmup_ratio=0.1,
         logging_steps=10,
         push_to_hub=False,
+        report_to=report_to
     )
 
     trainer = Trainer(
