@@ -18,6 +18,9 @@ from torch.utils.data import Dataset
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
+from datasets import Dataset
+from transformers import AutoTokenizer
+
 MAGIC_SEED = len('DS Internship 2023 | KazanExpress')
 
 def expand_text_fields(df: pd.DataFrame()) -> pd.DataFrame():
@@ -333,3 +336,88 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
                                             stratify=X_duplicated['category_id'])
                                         
     return X_train_splitted, X_valid_splitted
+
+def create_text_datasets(prep_train_dataset: pd.DataFrame(), 
+                         prep_predict_dataset: pd.DataFrame(), 
+                         tokenizer_checkpoint: str) -> pd.DataFrame():
+    """
+    prepare text datasets using huggingface 'datasets' and 'tokenizers'
+
+    Parameters
+    ----------
+        prep_train_dataset (pf.DataFrame()):
+            train part of dataset
+
+        prep_predict_dataset (pf.DataFrame()):
+            predict part of dataset. 
+            Needed to convert data in tensors
+
+        tokenizer_checkpoint (str):
+            path where to get tokenizer for processing datasets
+
+    Return
+    ------
+        unsplitted_dataset:
+            unsplitted train dataset for extracting features
+
+        train_dataset:
+            train converted in tensors
+        
+        valid_dataset:
+            validation converted in tensors
+
+        predict_dataset:
+            predict dataset for feature exctraction
+            
+        label2id, id2label:
+            mapping for getting label <-> id and vice versa
+    """
+
+    # split
+    train_dataset, valid_dataset = stratified_train_test_split_df(prep_train_dataset)
+
+    # to huggingface format
+    train_dataset = Dataset.from_pandas(train_dataset)
+    valid_dataset = Dataset.from_pandas(valid_dataset)
+    unsplitted_dataset = Dataset.from_pandas(prep_train_dataset)
+    predict_dataset = Dataset.from_pandas(prep_predict_dataset)
+
+    # init tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_checkpoint)
+
+    # tokenize
+    # train split
+    train_dataset = train_dataset.map(lambda examples: tokenizer(
+        examples["text"], 
+        padding="max_length", 
+        max_length=700), batched=True
+    )
+        
+    # validation split
+    valid_dataset = valid_dataset.map(lambda examples: tokenizer(
+        examples["text"], 
+        padding="max_length", 
+        max_length=700), batched=True
+    )
+
+    # unsplitted
+    unsplitted_dataset = unsplitted_dataset.map(lambda examples: tokenizer(
+        examples["text"], 
+        padding="max_length", 
+        max_length=700), batched=True
+    )
+
+    # predict
+    predict_dataset = predict_dataset.map(lambda examples: tokenizer(
+        examples["text"], 
+        padding="max_length", 
+        max_length=700), batched=True
+    )
+    
+    # get label <-> id mapping
+    label2id, id2label = create_labels_mapping(train_dataset)
+
+    return unsplitted_dataset, train_dataset, valid_dataset, \
+           predict_dataset, label2id, id2label
+
+
