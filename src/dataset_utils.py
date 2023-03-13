@@ -130,9 +130,13 @@ def create_labels_mapping(dataset: pd.DataFrame()) -> dict():
         id2label (dict()): 
             id <-> label mapping
     """
-
-    labels = sorted(list(set(dataset['category_id'])))
-    label2id, id2label = dict(), dict()
+    try:
+        labels = sorted(list(set(dataset['category_id'])))
+        label2id, id2label = dict(), dict()
+    
+    except:
+        labels = sorted(list(set(dataset['label'])))
+        label2id, id2label = dict(), dict()
 
     for i, label in enumerate(labels):
         label2id[label] = str(i)
