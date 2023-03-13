@@ -428,6 +428,12 @@ def create_text_datasets(prep_train_dataset: pd.DataFrame(),
         max_length=512, 
         truncation=True), batched=True
     )
+
+    # to torch
+    unsplitted_dataset.set_format('torch')
+    train_dataset.set_format('torch')
+    valid_dataset.set_format('torch')
+    predict_dataset.set_format('torch')
     
     # get label <-> id mapping
     label2id, id2label = create_labels_mapping(train_dataset)
