@@ -310,10 +310,10 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
     categories = X_train['category_id']
 
     # count unpopular values
-    cat_count = pd.DataFrame(categories.value_counts(), columns=['count'])
+    cat_count = pd.DataFrame(categories.value_counts())
 
     # get index = category
-    unpopular_categ = list(cat_count[cat_count['count'] == 1].index)
+    unpopular_categ = list(cat_count[cat_count['category_id'] == 1].index)
     print('rare categories:', unpopular_categ)
 
     # duplicate
