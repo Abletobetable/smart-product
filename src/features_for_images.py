@@ -23,7 +23,8 @@ def compute_metrics(eval_pred):
 
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    return metric.compute(predictions=predictions, references=labels, average='weighted')
+    return metric.compute(predictions=predictions, 
+           references=labels, average='weighted')
 
 def create_model_and_trainer(model_checkpoint: str, 
                              train_dataset, valid_dataset, 

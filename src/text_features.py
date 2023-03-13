@@ -213,7 +213,8 @@ def compute_metrics(eval_pred):
 
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    return metric.compute(predictions=predictions, references=labels, average='weighted')
+    return metric.compute(predictions=predictions, 
+                          references=labels, average='weighted')
 
 def create_model_and_trainer(model_checkpoint: str, 
                              train_dataset, valid_dataset, 
@@ -249,9 +250,10 @@ def create_model_and_trainer(model_checkpoint: str,
 
     tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
     model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, 
-                                                    num_labels=num_labels,
-                                                    id2label=id2label,
-                                                    label2id=label2id,)
+                                                  num_labels=num_labels,
+                                                  id2label=id2label,
+                                                  label2id=label2id,
+                                                  ignore_mismatched_sizes=True,)
 
     # freeze feature extractor params 
     # (only classifier are trainable)
