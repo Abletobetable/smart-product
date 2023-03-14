@@ -3,6 +3,7 @@ function for calculating text features
 """
 
 import re
+import json
 import nltk
 import string
 import numpy as np
@@ -157,6 +158,71 @@ def filter_description(descriptions: pd.Series()) -> pd.Series():
         filtered.append(text)
 
     return pd.Series(filtered, name='description')
+
+def filter_characteristics(df: pd.DataFrame()) -> pd.Series(): 
+    """
+    every field in 
+    ['custom_characteristics', 'defined_characteristics', 'filters']
+    (if it not empty) is dict, so I will get every key from fields 
+    and concatenate in one string
+
+    Parameters
+    ----------
+        df (pd.DataFrame()): 
+            iterable for parse and processing characteristics
+    Return
+    ------
+        processed_characteristics (pd.Series()): 
+            cleaned and processed characteristics
+    """
+
+    filtered = []
+
+    # custom
+    for (cust, defin, filt) in tqdm(list(zip(df['custom_characteristics'], 
+                                             df['defined_characteristics'], 
+                                             df['filters']))):
+        
+        row = []
+
+        # custom
+        if cust != '{}':
+            try:
+                cust = cust.replace("\'", "\"")
+                d = json.loads(cust)
+                row = []
+                for key in d.keys():
+                    row.append(key.strip().lower())
+            except:
+                pass
+            
+
+        # defined
+        if defin != '{}':
+            try:
+                defin = defin.replace("\'", "\"")
+                d = json.loads(defin)
+                for key in d.keys():
+                    row.append(key.strip().lower())
+            except:
+                pass
+
+        # filters
+        if filt != '{}':
+            try:
+                filt = filt.replace("\'", "\"")
+                d = json.loads(filt)
+                for key in d.keys():
+                    row.append(key.strip().lower())
+            except:
+                pass
+
+        if len(row) > 0:
+            filtered.append(', '.join(row))
+        else:
+            filtered.append('')
+
+    return pd.Series(filtered, name='characteristics')
 
 def concatenate_text_fields(categories: pd.DataFrame(), 
                             prep_title: pd.Series(), 
