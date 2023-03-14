@@ -16,6 +16,9 @@ from transformers import TrainingArguments, Trainer
 
 from datasets import load_metric
 
+import torch
+from torch.utils.data import DataLoader
+
 def create_average_navec_embed(
     navec_model, 
     sentences: pd.Series(), 
@@ -289,3 +292,56 @@ def create_model_and_trainer(model_checkpoint: str,
     )
 
     return model, trainer
+
+def get_text_features(dataset, model, device: str) -> np.ndarray:
+    """
+    get features for image dataset from model provided
+        Parameters
+    ----------
+        dataset : 
+            dataset with images
+
+        model : 
+            model with weights
+        
+        device (str):
+            cpu or gpu use for extraction
+            
+        model_type (['ViT', 'CNN']):
+            set model for feature extraction
+    Return
+    ------
+        X (np.ndarray()): array with features 
+        and
+        1 column: product ids
+        2 column: category ids
+    """
+    loader = DataLoader(dataset, batch_size=1,
+                        shuffle=False, num_workers=2)
+
+    model.to(device)
+
+    num_features = 768
+
+    # in predict dataset we dont have category_id column
+    if 'category_id' in dataset[0].keys():
+        X = np.zeros((len(dataset), num_features+2))
+    else:
+        X = np.zeros((len(dataset), num_features+1))
+
+    model.eval()
+    for i, batch in enumerate(tqdm(loader)):
+
+        with torch.no_grad():
+
+            output = model.bert(batch['input_ids'].to(device)).pooler_output.cpu()
+
+            if 'category_id' in dataset[0].keys():
+                X[i, 2:] = output
+                X[i, 0] = batch['category_id']
+                X[i, 1] = batch['product_id']
+            else:
+                X[i, 1:] = output
+                X[i, 0] = batch['product_id']
+
+    return X
