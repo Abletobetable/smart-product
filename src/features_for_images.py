@@ -78,7 +78,7 @@ def create_model_and_trainer(model_checkpoint: str,
     training_args = TrainingArguments(
         output_dir="image_feature_extractor",
         remove_unused_columns=False,
-        evaluation_strategy="steps",
+        evaluation_strategy="epoch",
         save_strategy="steps",
         save_steps=1000,
         learning_rate=5e-5,
