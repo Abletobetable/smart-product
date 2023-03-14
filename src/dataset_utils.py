@@ -14,7 +14,7 @@ from skimage import io
 from sklearn.model_selection import train_test_split
 
 import torch
-from torch.utils.data import Dataset
+# from torch.utils.data import Dataset
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
@@ -143,13 +143,13 @@ def create_labels_mapping(dataset: pd.DataFrame()) -> dict():
 
     return label2id, id2label
 
-class ProductsDataset(Dataset):
+class ProductsDataset(torch.utils.data.Dataset):
     
-    def __init__(self, imgs: pd.DataFrame(), transform=None):
+    def __init__(self, imgs: list, transform=None):
         """
         Parameters
         ----------
-            imgs (pd.DataFrame()): 
+            imgs (list): 
                 dataframe with pairs (path, category)
             transform:
                 transforms for images (augmentation)
@@ -162,14 +162,11 @@ class ProductsDataset(Dataset):
 
     def __getitem__(self, idx):
         
-        image_filepath = self.imgs.iloc[idx, 0]
-
-        # image = io.imread(image_filepath)
-
+        image_filepath = self.imgs[idx][0]
         image = cv2.imread(image_filepath)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        category = self.imgs.iloc[idx, 1]
+        category = self.imgs[idx][1]
 
         if self.transform is not None:
             image = self.transform(image=image)['image']
@@ -236,8 +233,8 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
     # unsplitted dataset
     unsplitted_labels = [torch.tensor(int(label2id[l])) \
                          for l in preprocessed_dataset_train['category_id']]
-    unsplitted_set = pd.DataFrame(list(zip(preprocessed_dataset_train['path'], 
-                                           unsplitted_labels)))
+    unsplitted_set = list(zip(preprocessed_dataset_train['path'], 
+                                           unsplitted_labels))
     unsplitted_dataset = ProductsDataset(unsplitted_set, test_transform)
 
     # splitted datasets
@@ -245,9 +242,9 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
     valid_labels = [torch.tensor(int(label2id[l])) for l in valid_df['category_id']]
     pred_labels = [torch.tensor(0) for i in range(len(preprocessed_dataset_pred))]
 
-    trainset = pd.DataFrame(list(zip(train_df['path'], train_labels)))
-    validset = pd.DataFrame(list(zip(valid_df['path'], valid_labels)))
-    predset = pd.DataFrame(list(zip(preprocessed_dataset_pred['path'], pred_labels)))
+    trainset = list(zip(train_df['path'], train_labels))
+    validset = list(zip(valid_df['path'], valid_labels))
+    predset = list(zip(preprocessed_dataset_pred['path'], pred_labels))
 
     train_dataset = ProductsDataset(trainset, train_transform)
     valid_dataset = ProductsDataset(validset, test_transform)
