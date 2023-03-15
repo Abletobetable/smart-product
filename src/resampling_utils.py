@@ -7,8 +7,43 @@ import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from imblearn.under_sampling import RandomUnderSampler
+from imblearn.over_sampling import RandomOverSampler
+
+from metric_learn import LFDA
+from sklearn.utils.validation import _num_features
 
 MAGIC_SEED = len('DS Internship 2023 | KazanExpress')
+
+def reduce_dimension(X_train, y_train, X_valid: np.array) -> np.array:
+    """
+    reduce dimension of features using Local Fisher Discriminant Analysis
+    then transform X_train and X_valid
+
+    Parameters
+    ----------
+        X_train (np.array()):
+            dataset for under-sampling
+
+        y_train (np.array()):
+            targets for supervised reduction
+
+        X_valid (np.array()):
+            dataset for under-sampling
+
+        num_features (int):
+            num_features for reducing
+
+    Return
+    ------
+        X_reduced_train, X_reduced_valid (np.array())
+    """
+
+    metric_model = LFDA(n_components=_num_features)
+    metric_model.fit(X_train, y_train)
+    X_reducted_train = metric_model.transform(X_train)
+    X_reducted_valid = metric_model.transform(X_valid)
+
+    return X_reducted_train, X_reducted_valid
 
 def under_sample(
     X_train: np.array, 
@@ -20,17 +55,17 @@ def under_sample(
     Parameters
     ----------
         X_train (np.array()):
-            dataset to perfome splitting
+            dataset for under-sampling
 
-        X_train (np.array()):
-            dataset to perfome splitting
+        y_train (np.array()):
+            dataset for under-sampling
 
         max_count (int):
             maximum possible amount of samples in every class
 
     Return
     ------
-        X_train, y_train, X_valid, y_valid (np.array())
+        X_resampled, y_resampled (np.array())
     """
 
     indexes = pd.DataFrame(pd.Series(y_train).value_counts(), 
@@ -54,6 +89,53 @@ def under_sample(
 
     print('Shape before under-sampling:', X_train.shape)
     print('Shape after under-sampling:', X_resampled.shape)
+
+    return X_resampled, y_resampled
+
+def over_sample(
+    X_train: np.array, 
+    y_train: np.array, 
+    min_count: int = 25) -> np.array:
+    """
+    resample given dataset using oversample method
+
+    Parameters
+    ----------
+        X_train (np.array()):
+            dataset for over sampling
+
+        y_train (np.array()):
+            dataset for over sampling
+
+        max_count (int):
+            minimum possible amount of samples in every class
+
+    Return
+    ------
+        X_resampled, y_resampled (np.array())
+    """
+
+    indexes = pd.DataFrame(pd.Series(y_train).value_counts(), 
+                           columns=['count']).iloc[:, 0].index
+
+    counts = pd.DataFrame(pd.Series(y_train).value_counts(), 
+                          columns=['count']).iloc[:, 0]
+
+    # sampling stratagy for RandomOverSampler
+    weights = dict()
+    for (idx, cnt) in list(zip(indexes, counts)):
+        if cnt < min_count:
+            weights[idx] = min_count    
+
+    rus = RandomOverSampler(
+        random_state=MAGIC_SEED, 
+        sampling_strategy=weights,
+    )
+
+    X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
+
+    print('Shape before over-sampling:', X_train.shape)
+    print('Shape after over-sampling:', X_resampled.shape)
 
     return X_resampled, y_resampled
 
