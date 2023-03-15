@@ -25,13 +25,20 @@ def compute_metrics(eval_pred):
     return metric.compute(predictions=predictions, 
            references=labels, average='weighted')
 
-def create_model_and_trainer(model_checkpoint: str, 
-                             train_dataset, valid_dataset, 
-                             num_epochs: int, batch_size: int,
-                             freeze: bool, num_labels: int, 
-                             label2id: dict(), id2label: dict(), 
-                             report_to: Literal['wandb', 'local'], 
-                             push_to_hub: bool):
+def create_model_and_trainer(
+    model_checkpoint: str, 
+    train_dataset, 
+    valid_dataset, 
+    num_epochs: int, 
+    batch_size: int,
+    lr: float,
+    freeze: bool, 
+    num_labels: int, 
+    label2id: dict(), 
+    id2label: dict(), 
+    report_to: Literal['wandb', 'local'], 
+    push_to_hub: bool
+    ):
     """
     1. init model for training from model_checkpoint
 
@@ -81,7 +88,7 @@ def create_model_and_trainer(model_checkpoint: str,
         evaluation_strategy="epoch",
         save_strategy="steps",
         save_steps=1000,
-        learning_rate=5e-5,
+        learning_rate=lr, 
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         num_train_epochs=num_epochs,
