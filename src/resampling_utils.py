@@ -14,7 +14,11 @@ from sklearn.utils.validation import _num_features
 
 MAGIC_SEED = len('DS Internship 2023 | KazanExpress')
 
-def reduce_dimension(X_train, y_train, X_valid: np.array) -> np.array:
+def reduce_dimension(
+    X_train: np.array,
+    y_train: np.array, 
+    X_valid: np.array, 
+    num_features: int = 512) -> np.array:
     """
     reduce dimension of features using Local Fisher Discriminant Analysis
     then transform X_train and X_valid
@@ -38,7 +42,7 @@ def reduce_dimension(X_train, y_train, X_valid: np.array) -> np.array:
         X_reduced_train, X_reduced_valid (np.array())
     """
 
-    metric_model = LFDA(n_components=_num_features)
+    metric_model = LFDA(n_components=num_features)
     metric_model.fit(X_train, y_train)
     X_reducted_train = metric_model.transform(X_train)
     X_reducted_valid = metric_model.transform(X_valid)
