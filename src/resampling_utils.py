@@ -13,7 +13,7 @@ MAGIC_SEED = len('DS Internship 2023 | KazanExpress')
 def under_sample(
     X_train: np.array, 
     y_train: np.array, 
-    max_count: int = 100) -> np.array():
+    max_count: int = 100) -> np.array:
     """
     resample given dataset using undersample method
 
