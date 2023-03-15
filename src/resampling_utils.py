@@ -1,16 +1,61 @@
+"""
+functions for preprocessing final data: resample and split
+"""
+
 import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
+from imblearn.under_sampling import RandomUnderSampler
+
+MAGIC_SEED = len('DS Internship 2023 | KazanExpress')
 
 def under_sample(
     X_train: np.array, 
-    y_valid: np.array, 
-    count: int =100) -> np.array():
-"""
-resample given dataset using undersample method
-"""
+    y_train: np.array, 
+    max_count: int = 100) -> np.array():
+    """
+    resample given dataset using undersample method
 
-return X_resampled, y_resampled
+    Parameters
+    ----------
+        X_train (np.array()):
+            dataset to perfome splitting
+
+        X_train (np.array()):
+            dataset to perfome splitting
+
+        max_count (int):
+            maximum possible amount of samples in every class
+
+    Return
+    ------
+        X_train, y_train, X_valid, y_valid (np.array())
+    """
+
+    indexes = pd.DataFrame(pd.Series(y_train).value_counts(), 
+                           columns=['count']).iloc[:, 0].index
+
+    counts = pd.DataFrame(pd.Series(y_train).value_counts(), 
+                          columns=['count']).iloc[:, 0]
+
+    # sampling stratagy for RandomUnderSampler
+    weights = dict()
+    for (idx, cnt) in list(zip(indexes, counts)):
+        if cnt > max_count:
+            weights[idx] = max_count    
+
+    rus = RandomUnderSampler(
+        random_state=MAGIC_SEED, 
+        sampling_strategy=weights,
+    )
+
+    X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
+
+    print('Shape before under-sampling:', X_train.shape)
+    print('Shape after under-sampling:', X_resampled.shape)
+
+    return X_resampled, y_resampled
 
 def stratified_train_test_split_numpy(X_train: np.array) -> np.array:
     """
