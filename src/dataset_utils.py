@@ -172,6 +172,43 @@ class ProductsDataset(torch.utils.data.Dataset):
             image = self.transform(image=image)['image']
         return {'pixel_values': image, 'label': category}
 
+
+def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
+    """
+    the same as stratified_train_test_split_numpy, but works with pd.DataFrame()
+    duplicate single objects for stratified split
+    after duplicating apply train_test_split from sklearn
+    Parameters
+    ----------
+        X_train (pf.DataFrame()):
+            dataset to perfome splitting
+    Return
+    ------
+        X_train_splitted, X_valid_splitted (pd.DataFrame())
+    """
+    
+    # get category_id
+    categories = X_train['category_id']
+    # count unpopular values
+    cat_count = pd.DataFrame(categories.value_counts())
+    # get index = category
+    unpopular_categ = list(cat_count[cat_count['category_id'] == 1].index)
+    print('rare categories:', unpopular_categ)
+    # duplicate
+    X_duplicated = X_train
+    for categ in unpopular_categ:
+        # get row for duplicate
+        idx = X_train[X_train['category_id'] == categ].index[0]
+        new_row = X_train.iloc[idx, :].to_list()
+        # append new row
+        X_duplicated.loc[len(X_duplicated.index)] = new_row
+    X_train_splitted, X_valid_splitted = train_test_split(X_duplicated, 
+                                            test_size=0.2, 
+                                            random_state=MAGIC_SEED, 
+                                            stratify=X_duplicated['category_id'])
+
+    return X_train_splitted, X_valid_splitted
+
 def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(), 
                           preprocessed_dataset_pred: pd.DataFrame()):
     """
