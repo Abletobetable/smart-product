@@ -4,13 +4,15 @@ functions for preprocessing final data: resample and split
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler
+from sklearn.model_selection import ParameterGrid
 
 from metric_learn import LFDA
-from sklearn.utils.validation import _num_features
 
 MAGIC_SEED = len('DS Internship 2023 | KazanExpress')
 
@@ -232,3 +234,100 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
                                             stratify=X_duplicated['category_id'])
                                         
     return X_train_splitted, X_valid_splitted
+
+def grid_search(X_train, y_train, 
+                X_valid, y_valid, 
+                params: dict(), clf) -> dict():
+    """
+    grid search for best combination of parameters:
+    dimension reduction + under-sample + over-sample
+
+    Parameters
+    ----------
+        params (list):
+            list with triplets of parameters
+
+        clf :
+            estimator for searching best parameters
+    Return
+    ------
+        dict with combinations and scores
+    """
+
+    scores = dict()
+
+    for pair in tqdm(list(ParameterGrid(params))):
+
+        # no resampling
+        if pair['lower_bound'] == 1 and pair['upper_bound'] == 2134:
+            X_reduced_train, X_reduced_valid = reduce_dimension(
+                X_train, 
+                y_train, 
+                X_valid, 
+                num_features = pair['n_components']
+            )
+            clf.fit(X_resampled, y_resampled)
+            pred = clf.predict(X_reduced_valid)
+            f1 = f1_score(y_valid, pred, average='weighted')
+            scores[(pair['lower_bound'], pair['upper_bound'], 
+                    pair['n_components'])] = f1
+            print(pair, ':', f1)
+            print()
+
+        # only undersampling
+        elif pair['lower_bound'] == 1:
+            X_reduced_train, X_reduced_valid = reduce_dimension(
+                X_train, 
+                y_train, 
+                X_valid, 
+                num_features = pair['n_components']
+            )
+            X_resampled, y_resampled = under_sample(X_reduced_train, y_train, 
+                                                    pair['upper_bound'])
+            clf.fit(X_resampled, y_resampled)
+            pred = clf.predict(X_reduced_valid)
+            f1 = f1_score(y_valid, pred, average='weighted')
+            scores[(pair['lower_bound'], pair['upper_bound'], 
+                    pair['n_components'])] = f1
+            print(pair, ':', f1)
+            print()
+
+        # only oversampling
+        elif pair['upper_bound'] == 2134:
+            X_reduced_train, X_reduced_valid = reduce_dimension(
+                X_train, 
+                y_train, 
+                X_valid, 
+                num_features = pair['n_components']
+            )
+            X_resampled, y_resampled = over_sample(X_reduced_train, y_train, 
+                                                    pair['lower_bound'])
+            clf.fit(X_resampled, y_resampled)
+            pred = clf.predict(X_reduced_valid)
+            f1 = f1_score(y_valid, pred, average='weighted')
+            scores[(pair['lower_bound'], pair['upper_bound'], 
+                    pair['n_components'])] = f1
+            print(pair, ':', f1)
+            print()
+
+        # reduce and resample
+        else:
+            X_reduced_train, X_reduced_valid = reduce_dimension(
+                X_train, 
+                y_train, 
+                X_valid, 
+                num_features = pair['n_components']
+            )
+            X_resampled, y_resampled = under_sample(X_reduced_train, y_train, pair['upper_bound'])
+            X_resampled, y_resampled = over_sample(X_resampled, y_resampled, pair['lower_bound'])
+
+            # fit and validate estimator
+            clf.fit(X_resampled, y_resampled)
+            pred = clf.predict(X_reduced_valid)
+            f1 = f1_score(y_valid, pred, average='weighted')
+            scores[(pair['lower_bound'], pair['upper_bound'], 
+                    pair['n_components'])] = f1
+            print(pair, ':', f1)
+            print()
+
+    return scores
