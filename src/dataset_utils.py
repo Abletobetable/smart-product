@@ -1,7 +1,6 @@
 """
-couple dataset functions for preprocessing
+functions for dataset preprocessing
 """
-
 
 import os
 import cv2
@@ -14,7 +13,6 @@ from skimage import io
 from sklearn.model_selection import train_test_split
 
 import torch
-# from torch.utils.data import Dataset
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
@@ -24,18 +22,18 @@ from transformers import AutoTokenizer
 
 MAGIC_SEED = len('DS Internship 2023 | KazanExpress')
 
-def expand_text_fields(df: pd.DataFrame()) -> pd.DataFrame():
+def expand_text_fields(df: pd.DataFrame) -> pd.DataFrame:
     """
     expand every category in text fields in single column
 
     Parameters
     ----------
-        df (pd.DataFrame()): 
+        df (pd.DataFrame): 
             dataframe to process
 
     Return
     ------
-        new_df (pd.DataFrame()): 
+        new_df (pd.DataFrame): 
             processed dataframe
     """
     new_df = df
@@ -67,19 +65,19 @@ def expand_text_fields(df: pd.DataFrame()) -> pd.DataFrame():
 
     return new_df
 
-def add_images_path(path_df: pd.DataFrame(), 
-                    expanded_df: pd.DataFrame(), 
-                    split: Literal['train', 'test']) -> pd.DataFrame():
+def add_images_path(path_df: pd.DataFrame,
+                    expanded_df: pd.DataFrame,
+                    split: Literal['train', 'test']) -> pd.DataFrame:
     """
     add to dataframe path to images
     inside: get path with os.listdir() and then pd.merge()
 
     Parameters
     ----------
-        path_df (pd.DataFrame()): 
+        path_df (pd.DataFrame): 
             dataframe with raw path
 
-        expanded_df (pd.DataFrame()): 
+        expanded_df (pd.DataFrame): 
             dataframe with information about products
 
         split (Literal['train', 'test']): 
@@ -87,7 +85,7 @@ def add_images_path(path_df: pd.DataFrame(),
 
     Return
     ------
-        new_df (pd.DataFrame()): 
+        new_df (pd.DataFrame): 
             full dataframe
     """
 
@@ -113,14 +111,14 @@ def add_images_path(path_df: pd.DataFrame(),
 
     return new_df
 
-def create_labels_mapping(dataset: pd.DataFrame()) -> dict():
+def create_labels_mapping(dataset: pd.DataFrame) -> dict():
     """
     create label2id and id2label dicts 
     for mapping between categories and labels
 
     Parameters
     ----------
-        dataset (pd.DataFrame()): 
+        dataset (pd.DataFrame): 
             dataframe with all content inside
         
     Return
@@ -144,6 +142,9 @@ def create_labels_mapping(dataset: pd.DataFrame()) -> dict():
     return label2id, id2label
 
 class ProductsDataset(torch.utils.data.Dataset):
+    """
+    inherit from torch.utils.data.Dataset for creating custom dataset
+    """
     
     def __init__(self, imgs: list, transform=None):
         """
@@ -161,7 +162,7 @@ class ProductsDataset(torch.utils.data.Dataset):
         return len(self.imgs)
 
     def __getitem__(self, idx):
-        
+
         image_filepath = self.imgs[idx][0]
         image = cv2.imread(image_filepath)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -173,53 +174,62 @@ class ProductsDataset(torch.utils.data.Dataset):
         return {'pixel_values': image, 'label': category}
 
 
-def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
+def stratified_train_test_split_df(X_train: pd.DataFrame) -> pd.DataFrame:
     """
-    the same as stratified_train_test_split_numpy, but works with pd.DataFrame()
+    the same as stratified_train_test_split_numpy, but works with pd.DataFrame
     duplicate single objects for stratified split
     after duplicating apply train_test_split from sklearn
+
     Parameters
     ----------
-        X_train (pf.DataFrame()):
+        X_train (pf.DataFrame):
             dataset to perfome splitting
     Return
     ------
-        X_train_splitted, X_valid_splitted (pd.DataFrame())
+        X_train_splitted, X_valid_splitted (pd.DataFrame)
     """
-    
+
     # get category_id
     categories = X_train['category_id']
+
     # count unpopular values
     cat_count = pd.DataFrame(categories.value_counts())
+
     # get index = category
     unpopular_categ = list(cat_count[cat_count['category_id'] == 1].index)
+
     print('rare categories:', unpopular_categ)
+
     # duplicate
     X_duplicated = X_train
+
     for categ in unpopular_categ:
+
         # get row for duplicate
         idx = X_train[X_train['category_id'] == categ].index[0]
         new_row = X_train.iloc[idx, :].to_list()
+
         # append new row
         X_duplicated.loc[len(X_duplicated.index)] = new_row
-    X_train_splitted, X_valid_splitted = train_test_split(X_duplicated, 
-                                            test_size=0.2, 
-                                            random_state=MAGIC_SEED, 
+
+    X_train_splitted, X_valid_splitted = train_test_split(X_duplicated,
+                                            test_size=0.2,
+                                            random_state=MAGIC_SEED,
                                             stratify=X_duplicated['category_id'])
 
     return X_train_splitted, X_valid_splitted
 
-def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(), 
-                          preprocessed_dataset_pred: pd.DataFrame()):
+def create_image_datasets(preprocessed_dataset_train: pd.DataFrame,
+                          preprocessed_dataset_pred: pd.DataFrame):
     """
     create pytorch datasets: train, valid and predict
 
     Parameters
     ----------
-        preprocessed_dataset_train (pd.DataFrame()): 
+        preprocessed_dataset_train (pd.DataFrame): 
             train dataframe with all content inside
         
-        preprocessed_dataset_predict (pd.DataFrame()): 
+        preprocessed_dataset_predict (pd.DataFrame): 
             predict dataframe with all content inside
         
     Return
@@ -238,7 +248,7 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
     """
 
     train_transform = A.Compose([
-            A.augmentations.geometric.resize.Resize(224, 224), 
+            A.augmentations.geometric.resize.Resize(224, 224),
             A.augmentations.geometric.rotate.RandomRotate90(p=0.5),
             A.Flip(p=0.5),
             A.Normalize(
@@ -257,7 +267,7 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
             ToTensorV2()
     ])
 
-    # To make it easier for the model to get the label name from the label id, 
+    # To make it easier for the model to get the label name from the label id,
     # create a dictionary that maps the label name to an integer and vice versa
     label2id, id2label = create_labels_mapping(preprocessed_dataset_train)
 
@@ -270,7 +280,7 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
     # unsplitted dataset
     unsplitted_labels = [torch.tensor(int(label2id[l])) \
                          for l in preprocessed_dataset_train['category_id']]
-    unsplitted_set = list(zip(preprocessed_dataset_train['path'], 
+    unsplitted_set = list(zip(preprocessed_dataset_train['path'],
                                            unsplitted_labels))
     unsplitted_dataset = ProductsDataset(unsplitted_set, test_transform)
 
@@ -289,18 +299,18 @@ def create_image_datasets(preprocessed_dataset_train: pd.DataFrame(),
 
     return unsplitted_dataset, train_dataset, valid_dataset, pred_dataset, label2id, id2label
 
-def create_text_datasets(prep_train_dataset: pd.DataFrame(), 
-                         prep_predict_dataset: pd.DataFrame(), 
-                         tokenizer_checkpoint: str) -> pd.DataFrame():
+def create_text_datasets(prep_train_dataset: pd.DataFrame,
+                         prep_predict_dataset: pd.DataFrame,
+                         tokenizer_checkpoint: str) -> pd.DataFrame:
     """
     prepare text datasets using huggingface 'datasets' and 'tokenizers'
 
     Parameters
     ----------
-        prep_train_dataset (pf.DataFrame()):
+        prep_train_dataset (pf.DataFrame):
             train part of dataset
 
-        prep_predict_dataset (pf.DataFrame()):
+        prep_predict_dataset (pf.DataFrame):
             predict part of dataset. 
             Needed to convert data in tensors
 
@@ -347,33 +357,33 @@ def create_text_datasets(prep_train_dataset: pd.DataFrame(),
     # tokenize
     # train split
     train_dataset = train_dataset.map(lambda examples: tokenizer(
-        examples["text"], 
-        padding="max_length", 
-        max_length=512, 
+        examples["text"],
+        padding="max_length",
+        max_length=512,
         truncation=True), batched=True
     )
-        
+
     # validation split
     valid_dataset = valid_dataset.map(lambda examples: tokenizer(
-        examples["text"], 
-        padding="max_length", 
-        max_length=512, 
+        examples["text"],
+        padding="max_length",
+        max_length=512,
         truncation=True), batched=True
     )
 
     # unsplitted
     unsplitted_dataset = unsplitted_dataset.map(lambda examples: tokenizer(
-        examples["text"], 
-        padding="max_length", 
-        max_length=512, 
+        examples["text"],
+        padding="max_length",
+        max_length=512,
         truncation=True), batched=True
     )
 
     # predict
     predict_dataset = predict_dataset.map(lambda examples: tokenizer(
-        examples["text"], 
-        padding="max_length", 
-        max_length=512, 
+        examples["text"],
+        padding="max_length",
+        max_length=512,
         truncation=True), batched=True
     )
 
@@ -385,5 +395,3 @@ def create_text_datasets(prep_train_dataset: pd.DataFrame(),
 
     return unsplitted_dataset, train_dataset, valid_dataset, \
            predict_dataset, label2id, id2label
-
-

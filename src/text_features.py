@@ -21,10 +21,10 @@ import torch
 from torch.utils.data import DataLoader
 
 def create_average_navec_embed(
-    navec_model, 
-    sentences: pd.Series(), 
-    category_ids: pd.Series(), 
-    product_ids: pd.Series() = None, 
+    navec_model,
+    sentences: pd.Series,
+    category_ids: pd.Series,
+    product_ids: pd.Series = None,
     split: Literal['train', 'test'] = 'train',
 ) -> np.array:
     """
@@ -36,13 +36,13 @@ def create_average_navec_embed(
         navec_model: 
             model with pretrained embeddings
 
-        sentences (pd.Series()): 
+        sentences (pd.Series): 
             iterable with sentences to perfome average embeddings
 
-        category_ids (pd.Series()): 
+        category_ids (pd.Series): 
             iterable with categories
         
-        product_ids (pd.Series()): 
+        product_ids (pd.Series): 
             iterable with categories
 
         split ('train', 'test'):
@@ -50,7 +50,7 @@ def create_average_navec_embed(
 
     Return
     ------
-        processed_attributes (pd.Series()): 
+        processed_attributes (pd.Series): 
             cleaned and processed attributes
     """
 
@@ -63,8 +63,8 @@ def create_average_navec_embed(
     tokenizer = nltk.WordPunctTokenizer()
 
     # main loop
-    for i, (title, cat, prod) in enumerate(tqdm(list(zip(sentences, 
-                                                       category_ids, 
+    for i, (title, cat, prod) in enumerate(tqdm(list(zip(sentences,
+                                                       category_ids,
                                                        product_ids)))):
 
         # get average embed
@@ -72,7 +72,7 @@ def create_average_navec_embed(
         for token in tokenizer.tokenize(title.lower()):
             if token in navec_model:
                 title_embed.append(navec_model[token])
-        
+
         if len(title_embed) > 0: # get average embedding
             embed = np.mean(title_embed, axis = 0)
 
@@ -91,18 +91,18 @@ def create_average_navec_embed(
 
     return X
 
-def preprocess_attributes(attributes: pd.Series()) -> pd.Series():
+def preprocess_attributes(attributes: pd.Series) -> pd.Series:
     """
     parse attributes column and preprocess it
 
     Parameters
     ----------
-        attributes (pd.Series()): 
+        attributes (pd.Series): 
             iterable for parse and processing attributes
 
     Return
     ------
-        processed_attributes (pd.Series()): 
+        processed_attributes (pd.Series): 
             cleaned and processed attributes
     """
 
@@ -110,7 +110,7 @@ def preprocess_attributes(attributes: pd.Series()) -> pd.Series():
 
     # main loop
     for text in tqdm(attributes):
-        
+ 
         if len(text) > 2: # means string not empty
 
             # cleaning list
@@ -119,7 +119,7 @@ def preprocess_attributes(attributes: pd.Series()) -> pd.Series():
 
             # join in meaningful string
             string = ', '.join(lst)
-        
+
         else:
             string = ''
 
@@ -127,18 +127,18 @@ def preprocess_attributes(attributes: pd.Series()) -> pd.Series():
 
     return pd.Series(processed_attributes, name='attributes')
 
-def filter_description(descriptions: pd.Series()) -> pd.Series(): 
+def filter_description(descriptions: pd.Series) -> pd.Series:
     """
     filter using regular expressions description field
 
     Parameters
     ----------
-        descriptions (pd.Series()): 
+        descriptions (pd.Series): 
             iterable for parse and processing descriptions
 
     Return
     ------
-        processed_descriptions (pd.Series()): 
+        processed_descriptions (pd.Series): 
             cleaned and processed descriptionas
     """
 
@@ -159,7 +159,7 @@ def filter_description(descriptions: pd.Series()) -> pd.Series():
 
     return pd.Series(filtered, name='description')
 
-def filter_characteristics(df: pd.DataFrame()) -> pd.Series(): 
+def filter_characteristics(df: pd.DataFrame) -> pd.Series():
     """
     every field in 
     ['custom_characteristics', 'defined_characteristics', 'filters']
@@ -168,21 +168,21 @@ def filter_characteristics(df: pd.DataFrame()) -> pd.Series():
 
     Parameters
     ----------
-        df (pd.DataFrame()): 
+        df (pd.DataFrame): 
             iterable for parse and processing characteristics
     Return
     ------
-        processed_characteristics (pd.Series()): 
+        processed_characteristics (pd.Series): 
             cleaned and processed characteristics
     """
 
     filtered = []
 
     # custom
-    for (cust, defin, filt) in tqdm(list(zip(df['custom_characteristics'], 
-                                             df['defined_characteristics'], 
+    for (cust, defin, filt) in tqdm(list(zip(df['custom_characteristics'],
+                                             df['defined_characteristics'],
                                              df['filters']))):
-        
+
         row = []
 
         # custom
@@ -195,7 +195,6 @@ def filter_characteristics(df: pd.DataFrame()) -> pd.Series():
                     row.append(key.strip().lower())
             except:
                 pass
-            
 
         # defined
         if defin != '{}':
@@ -224,31 +223,31 @@ def filter_characteristics(df: pd.DataFrame()) -> pd.Series():
 
     return pd.Series(filtered, name='characteristics')
 
-def concatenate_text_fields(categories: pd.DataFrame(), 
-                            prep_title: pd.Series(), 
-                            prep_attrib: pd.Series(), 
-                            prep_descrip: pd.Series()) -> pd.DataFrame():
-    
+def concatenate_text_fields(categories: pd.DataFrame,
+                            prep_title: pd.Series,
+                            prep_attrib: pd.Series,
+                            prep_descrip: pd.Series) -> pd.DataFrame:
+
     """
     conctenate all text content using ". " between fields
 
     Parameters
     ----------
-        categories (pd.DataFrame()): 
+        categories (pd.DataFrame): 
             categories ids and product ids(if train part)
 
-        prep_title (pd.Series()): 
+        prep_title (pd.Series): 
             titles
 
-        prep_attributes (pd.Series()): 
+        prep_attributes (pd.Series): 
             attributes
 
-        prep_descrip (pd.Series()): 
+        prep_descrip (pd.Series): 
             descriptions
 
     Return
     ------
-        concated_text (pd.Series()): 
+        concated_text (pd.Series): 
             dataframe with concated text content
     """
 
@@ -277,20 +276,23 @@ def concatenate_text_fields(categories: pd.DataFrame(),
     return concated_text
 
 def compute_metrics(eval_pred):
+    """
+    this function called by trainer and compute given metric
+    """
 
     metric = load_metric('f1')
 
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    return metric.compute(predictions=predictions, 
+    return metric.compute(predictions=predictions,
                           references=labels, average='weighted')
 
-def create_model_and_trainer(model_checkpoint: str, 
-                             train_dataset, valid_dataset, 
+def create_model_and_trainer(model_checkpoint: str,
+                             train_dataset, valid_dataset,
                              num_epochs: int, batch_size: int,
-                             freeze: bool, num_labels: int, 
-                             label2id: dict(), id2label: dict(), 
-                             report_to: Literal['wandb', 'local'], 
+                             freeze: bool, num_labels: int,
+                             label2id: dict(), id2label: dict(),
+                             report_to: Literal['wandb', 'local'],
                              push_to_hub: bool):
     """
     1. init model for training from model_checkpoint
@@ -324,7 +326,7 @@ def create_model_and_trainer(model_checkpoint: str,
                                                   label2id=label2id,
                                                   ignore_mismatched_sizes=True,)
 
-    # freeze feature extractor params 
+    # freeze feature extractor params
     # (only classifier are trainable)
     if freeze:
         for param in model.bert.parameters():
@@ -378,7 +380,7 @@ def get_text_features(dataset, model, device: str) -> np.ndarray:
             set model for feature extraction
     Return
     ------
-        X (np.ndarray()): array with features 
+        X (np.array): array with features 
         and
         1 column: product ids
         2 column: category ids

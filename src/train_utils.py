@@ -10,12 +10,12 @@ from tqdm.notebook import tqdm
 
 from sklearn.metrics import f1_score
 
-import wandb 
+import wandb
 
 import torch
 from torch.optim.lr_scheduler import StepLR
 
-def trainer(model, train_loader, valid_loader, loss_function, 
+def trainer(model, train_loader, valid_loader, loss_function,
             optimizer, scheduler, cfg):
     """
     Parameters
@@ -71,10 +71,10 @@ def trainer(model, train_loader, valid_loader, loss_function,
         # valid_loader = tqdm(valid_loader, desc='valid batches')
 
         # train
-        epoch_loss = train_epoch(train_generator=train_loader, 
-                                 model=model, 
-                                 loss_function=loss_function, 
-                                 optimizer=optimizer, 
+        epoch_loss = train_epoch(train_generator=train_loader,
+                                 model=model,
+                                 loss_function=loss_function,
+                                 optimizer=optimizer,
                                  device=cfg['device'])
 
         # validation
@@ -84,25 +84,25 @@ def trainer(model, train_loader, valid_loader, loss_function,
                                         test_loader=valid_loader,
                                         loss_function=loss_function, 
                                         device=cfg['device'])
-        
+
         scheduler.step()
 
         # log things
-        trainer_log(epoch_loss, valid_loss, valid_f1, e, 
+        trainer_log(epoch_loss, valid_loss, valid_f1, e,
                     optimizer.param_groups[0]['lr'], min_valid_loss, cfg)
 
         # saving models
         if min_valid_loss > valid_loss:
             print(f'Validation Loss Decreased({min_valid_loss:.6f}--->{valid_loss:.6f}) \t Saving The Model')
             min_valid_loss = valid_loss
-            torch.save(model.state_dict(), 
+            torch.save(model.state_dict(),
                        f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth')
             if cfg['report_to'] == 'wandb':
-                wandb.log_artifact(f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth', 
+                wandb.log_artifact(f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth',
                                    name=f'saved_model_{e}', type='model')
         print()
 
-def train_epoch(train_generator, model, 
+def train_epoch(train_generator, model,
                 loss_function, optimizer, device):
     """
 
@@ -130,16 +130,16 @@ def train_epoch(train_generator, model,
     epoch_loss = 0
     total = 0
     for it, batch in enumerate(tqdm(train_generator)):
-        batch_loss = train_on_batch(model, 
+        batch_loss = train_on_batch(model,
                                     batch['pixel_values'], batch['label'],
                                     optimizer, loss_function, device)
-            
+
         epoch_loss += batch_loss*len(batch['pixel_values'])
         total += len(batch['pixel_values'])
-    
+
     return epoch_loss/total
 
-def train_on_batch(model, x_batch, y_batch, 
+def train_on_batch(model, x_batch, y_batch,
                    optimizer, loss_function, device):
     """
 
@@ -168,7 +168,7 @@ def train_on_batch(model, x_batch, y_batch,
     """
     model.train()
     optimizer.zero_grad()
-    
+
     output = model(x_batch.to(device))
 
     loss = loss_function(output, y_batch.to(device))
@@ -206,16 +206,16 @@ def tester(model, test_loader, loss_function = None, print_stats=False, device='
 
     """
     pred = []
-    real = [] 
+    real = []
     loss = 0
     model.eval()
     for it, batch in enumerate(tqdm(test_loader)):
-        
+
         x_batch = batch['pixel_values'].to(device)
         with torch.no_grad():
             output = model(x_batch)
 
-            if loss_function != None:
+            if loss_function is not None:
                 loss += loss_function(output, batch['label'].to(device))
 
         pred.extend(torch.argmax(output, dim=-1).cpu().numpy().tolist())
@@ -226,15 +226,18 @@ def tester(model, test_loader, loss_function = None, print_stats=False, device='
     if print_stats:
         print(F1)
 
-    if loss_function != None:
+    if loss_function is not None:
         return loss.cpu().item()/len(test_loader), F1
     else:
         return F1
 
 def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, min_val_loss, cfg):
+    """
+    make logging
+    """
 
     if cfg['report_to'] == 'wandb':
-        wandb.log({'train_loss': train_loss, 
+        wandb.log({'train_loss': train_loss,
                    'valid_loss': valid_loss,
                    'valid_f1': valid_f1, 
                    'epoch': epoch, 
@@ -245,7 +248,7 @@ def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, min_val_loss, cfg):
     print(f'valid f1 score: {valid_f1:.2f}')
 
 def image_pipeline(model, train_dataset, valid_dataset, cfg,
-             saved_model=None, to_train=True, to_test=True, 
+             saved_model=None, to_train=True, to_test=True,
              report_to=Literal['local', 'wandb']):
     """
     run training and/or testing process
@@ -287,9 +290,9 @@ def image_pipeline(model, train_dataset, valid_dataset, cfg,
         initialise model
         """
 
-        if saved_model == None:
+        if saved_model is None:
             model = model.to(cfg['device'])
-        if saved_model != None:
+        if saved_model is not None:
             model.load_state_dict(torch.load(saved_model, map_location=torch.device(cfg['device'])))
             model = model.to(cfg['device'])
 
@@ -308,7 +311,7 @@ def image_pipeline(model, train_dataset, valid_dataset, cfg,
         criterion = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg['lr'])
         scheduler = StepLR(optimizer, cfg['step_size'], cfg['step_gamma'])
-        
+
         return trainloader, validloader, criterion, optimizer, scheduler
 
     if report_to == 'wandb':
@@ -321,9 +324,9 @@ def image_pipeline(model, train_dataset, valid_dataset, cfg,
     # build the model
     model = build_model(model, cfg, saved_model)
 
-    # data and optimization 
+    # data and optimization
     trainloader, validloader,  \
-        criterion, optimizer, scheduler = make(model, train_dataset, 
+        criterion, optimizer, scheduler = make(model, train_dataset,
                                                valid_dataset, cfg)
 
     print('config:')
@@ -332,7 +335,7 @@ def image_pipeline(model, train_dataset, valid_dataset, cfg,
     print('running on device:', cfg['device'], '\n')
 
     if to_train:
-        trainer(model, trainloader, validloader, 
+        trainer(model, trainloader, validloader,
                 criterion, optimizer, scheduler, cfg)
 
     if to_test:

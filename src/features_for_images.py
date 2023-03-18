@@ -17,26 +17,29 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 def compute_metrics(eval_pred):
+    """
+    this function called by trainer and compute given metric
+    """
 
     metric = load_metric('f1')
 
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    return metric.compute(predictions=predictions, 
+    return metric.compute(predictions=predictions,
            references=labels, average='weighted')
 
 def create_model_and_trainer(
-    model_checkpoint: str, 
-    train_dataset, 
-    valid_dataset, 
-    num_epochs: int, 
+    model_checkpoint: str,
+    train_dataset,
+    valid_dataset,
+    num_epochs: int,
     batch_size: int,
     lr: float,
-    freeze: bool, 
-    num_labels: int, 
-    label2id: dict(), 
-    id2label: dict(), 
-    report_to: Literal['wandb', 'local'], 
+    freeze: bool,
+    num_labels: int,
+    label2id: dict(),
+    id2label: dict(),
+    report_to: Literal['wandb', 'local'],
     push_to_hub: bool
     ):
     """
@@ -64,7 +67,7 @@ def create_model_and_trainer(
     """
 
     processor = BeitImageProcessor.from_pretrained(model_checkpoint)
-    model = BeitForImageClassification.from_pretrained(model_checkpoint, 
+    model = BeitForImageClassification.from_pretrained(model_checkpoint,
                                                     num_labels=num_labels,
                                                     id2label=id2label,
                                                     label2id=label2id,
@@ -74,7 +77,7 @@ def create_model_and_trainer(
 
     model.classifier = nn.Linear(in_features=768, out_features=num_labels, bias=True)
 
-    # freeze feature extractor params 
+    # freeze feature extractor params
     # (only classifier are trainable)
     if freeze:
         for param in model.beit.parameters():
@@ -88,7 +91,7 @@ def create_model_and_trainer(
         evaluation_strategy="epoch",
         save_strategy="steps",
         save_steps=1000,
-        learning_rate=lr, 
+        learning_rate=lr,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         num_train_epochs=num_epochs,
@@ -110,9 +113,9 @@ def create_model_and_trainer(
 
     return model, trainer
 
-def get_image_features(dataset, model, device: str, 
-                       product_id: pd.Series(), 
-                       category_id: pd.Series() = None, 
+def get_image_features(dataset, model, device: str,
+                       product_id: pd.Series(),
+                       category_id: pd.Series() = None,
                        model_type: Literal['ViT', 'CNN'] = 'ViT') -> np.ndarray:
     """
     get features for image dataset from model provided
@@ -190,9 +193,3 @@ def get_image_features(dataset, model, device: str,
                     X[i, 1:] = output
 
     return X
-
-
-
-
-
-

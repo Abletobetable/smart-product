@@ -27,13 +27,13 @@ def reduce_dimension(
 
     Parameters
     ----------
-        X_train (np.array()):
+        X_train (np.array):
             dataset for under-sampling
 
-        y_train (np.array()):
+        y_train (np.array):
             targets for supervised reduction
 
-        X_valid (np.array()):
+        X_valid (np.array):
             dataset for under-sampling
 
         num_features (int):
@@ -41,7 +41,7 @@ def reduce_dimension(
 
     Return
     ------
-        X_reduced_train, X_reduced_valid (np.array())
+        X_reduced_train, X_reduced_valid (np.array)
     """
 
     metric_model = LFDA(n_components=num_features)
@@ -52,8 +52,8 @@ def reduce_dimension(
     return X_reducted_train, X_reducted_valid
 
 def under_sample(
-    X_train: np.array, 
-    y_train: np.array, 
+    X_train: np.array,
+    y_train: np.array,
     max_count: int = 100) -> np.array:
     """
     resample given dataset using undersample method
@@ -74,20 +74,20 @@ def under_sample(
         X_resampled, y_resampled (np.array())
     """
 
-    indexes = pd.DataFrame(pd.Series(y_train).value_counts(), 
+    indexes = pd.DataFrame(pd.Series(y_train).value_counts(),
                            columns=['count']).iloc[:, 0].index
 
-    counts = pd.DataFrame(pd.Series(y_train).value_counts(), 
+    counts = pd.DataFrame(pd.Series(y_train).value_counts(),
                           columns=['count']).iloc[:, 0]
 
     # sampling stratagy for RandomUnderSampler
     weights = dict()
     for (idx, cnt) in list(zip(indexes, counts)):
         if cnt > max_count:
-            weights[idx] = max_count    
+            weights[idx] = max_count
 
     rus = RandomUnderSampler(
-        random_state=MAGIC_SEED, 
+        random_state=MAGIC_SEED,
         sampling_strategy=weights,
     )
 
@@ -99,8 +99,8 @@ def under_sample(
     return X_resampled, y_resampled
 
 def over_sample(
-    X_train: np.array, 
-    y_train: np.array, 
+    X_train: np.array,
+    y_train: np.array,
     min_count: int = 25) -> np.array:
     """
     resample given dataset using oversample method
@@ -121,20 +121,20 @@ def over_sample(
         X_resampled, y_resampled (np.array())
     """
 
-    indexes = pd.DataFrame(pd.Series(y_train).value_counts(), 
+    indexes = pd.DataFrame(pd.Series(y_train).value_counts(),
                            columns=['count']).iloc[:, 0].index
 
-    counts = pd.DataFrame(pd.Series(y_train).value_counts(), 
+    counts = pd.DataFrame(pd.Series(y_train).value_counts(),
                           columns=['count']).iloc[:, 0]
 
     # sampling stratagy for RandomOverSampler
     weights = dict()
     for (idx, cnt) in list(zip(indexes, counts)):
         if cnt < min_count:
-            weights[idx] = min_count    
+            weights[idx] = min_count 
 
     rus = RandomOverSampler(
-        random_state=MAGIC_SEED, 
+        random_state=MAGIC_SEED,
         sampling_strategy=weights,
     )
 
@@ -162,7 +162,7 @@ def stratified_train_test_split_numpy(X_train: np.array) -> np.array:
     ------
         X_train, y_train, X_valid, y_valid (np.array())
     """
-    
+
     # get category_id
     categories = pd.Series(X_train[:, 0])
 
@@ -179,20 +179,20 @@ def stratified_train_test_split_numpy(X_train: np.array) -> np.array:
         new_row = X_train[np.where(X_train == categ)[0][0], :].reshape(1, -1)
         X_duplicated = np.concatenate((X_duplicated, new_row), axis=0)
 
-    X_train_splitted, X_valid_splitted = train_test_split(X_duplicated, 
-                                            test_size=0.2, 
-                                            random_state=MAGIC_SEED, 
+    X_train_splitted, X_valid_splitted = train_test_split(X_duplicated,
+                                            test_size=0.2,
+                                            random_state=MAGIC_SEED,
                                             stratify=X_duplicated[:, 0])
 
     X_train, y_train = X_train_splitted[:, 2:], X_train_splitted[:, 0]
     X_valid, y_valid = X_valid_splitted[:, 2:], X_valid_splitted[:, 0]
-                                        
+                              
     return X_train, y_train, X_valid, y_valid
 
-def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
+def stratified_train_test_split_df(X_train: pd.DataFrame) -> pd.DataFrame:
     """
 
-    the same as stratified_train_test_split_numpy, but works with pd.DataFrame()
+    the same as stratified_train_test_split_numpy, but works with pd.DataFrame
 
     duplicate single objects for stratified split
     after duplicating apply train_test_split from sklearn
@@ -204,7 +204,7 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
 
     Return
     ------
-        X_train_splitted, X_valid_splitted (pd.DataFrame())
+        X_train_splitted, X_valid_splitted (pd.DataFrame)
     """
 
     # get category_id
@@ -228,15 +228,15 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
         # append new row
         X_duplicated.loc[len(X_duplicated.index)] = new_row
 
-    X_train_splitted, X_valid_splitted = train_test_split(X_duplicated, 
-                                            test_size=0.2, 
-                                            random_state=MAGIC_SEED, 
+    X_train_splitted, X_valid_splitted = train_test_split(X_duplicated,
+                                            test_size=0.2,
+                                            random_state=MAGIC_SEED,
                                             stratify=X_duplicated['category_id'])
-                                        
+                         
     return X_train_splitted, X_valid_splitted
 
-def grid_search(X_train, y_train, 
-                X_valid, y_valid, 
+def grid_search(X_train, y_train,
+                X_valid, y_valid,
                 params: dict(), lfda_components, clf) -> dict():
     """
     grid search for best combination of parameters:
@@ -262,9 +262,9 @@ def grid_search(X_train, y_train,
     for num_comp in tqdm(lfda_components):
 
         X_reduced_train, X_reduced_valid = reduce_dimension(
-                    X_train, 
-                    y_train, 
-                    X_valid, 
+                    X_train,
+                    y_train,
+                    X_valid,
                     num_features = num_comp
                 )
 
@@ -272,44 +272,44 @@ def grid_search(X_train, y_train,
 
             # no resampling
             if pair['lower_bound'] == 1 and pair['upper_bound'] == 2134:
-                
+
                 clf.fit(X_resampled, y_resampled)
                 pred = clf.predict(X_reduced_valid)
                 f1 = f1_score(y_valid, pred, average='weighted')
-                scores[(pair['lower_bound'], pair['upper_bound'], 
+                scores[(pair['lower_bound'], pair['upper_bound'],
                         num_comp)] = f1
                 print(pair, ':', f1)
                 print()
 
             # only undersampling
             elif pair['lower_bound'] == 1:
-                
-                X_resampled, y_resampled = under_sample(X_reduced_train, y_train, 
+
+                X_resampled, y_resampled = under_sample(X_reduced_train, y_train,
                                                         pair['upper_bound'])
                 clf.fit(X_resampled, y_resampled)
                 pred = clf.predict(X_reduced_valid)
                 f1 = f1_score(y_valid, pred, average='weighted')
-                scores[(pair['lower_bound'], pair['upper_bound'], 
+                scores[(pair['lower_bound'], pair['upper_bound'],
                         num_comp)] = f1
                 print(pair, ':', f1)
                 print()
 
             # only oversampling
             elif pair['upper_bound'] == 2134:
-                
-                X_resampled, y_resampled = over_sample(X_reduced_train, y_train, 
+
+                X_resampled, y_resampled = over_sample(X_reduced_train, y_train,
                                                         pair['lower_bound'])
                 clf.fit(X_resampled, y_resampled)
                 pred = clf.predict(X_reduced_valid)
                 f1 = f1_score(y_valid, pred, average='weighted')
-                scores[(pair['lower_bound'], pair['upper_bound'], 
+                scores[(pair['lower_bound'], pair['upper_bound'],
                         num_comp)] = f1
                 print(pair, ':', f1)
                 print()
 
             # reduce and resample
             else:
-                
+
                 X_resampled, y_resampled = under_sample(X_reduced_train, y_train, pair['upper_bound'])
                 X_resampled, y_resampled = over_sample(X_resampled, y_resampled, pair['lower_bound'])
 
@@ -317,7 +317,7 @@ def grid_search(X_train, y_train,
                 clf.fit(X_resampled, y_resampled)
                 pred = clf.predict(X_reduced_valid)
                 f1 = f1_score(y_valid, pred, average='weighted')
-                scores[(pair['lower_bound'], pair['upper_bound'], 
+                scores[(pair['lower_bound'], pair['upper_bound'],
                         num_comp)] = f1
                 print(pair, ':', f1)
                 print()
