@@ -261,16 +261,18 @@ def grid_search(X_train, y_train,
 
     for num_comp in tqdm(lfda_components):
 
-        for pair in list(ParameterGrid(params)):
-
-            # no resampling
-            if pair['lower_bound'] == 1 and pair['upper_bound'] == 2134:
-                X_reduced_train, X_reduced_valid = reduce_dimension(
+        X_reduced_train, X_reduced_valid = reduce_dimension(
                     X_train, 
                     y_train, 
                     X_valid, 
                     num_features = num_comp
                 )
+
+        for pair in list(ParameterGrid(params)):
+
+            # no resampling
+            if pair['lower_bound'] == 1 and pair['upper_bound'] == 2134:
+                
                 clf.fit(X_resampled, y_resampled)
                 pred = clf.predict(X_reduced_valid)
                 f1 = f1_score(y_valid, pred, average='weighted')
@@ -281,12 +283,7 @@ def grid_search(X_train, y_train,
 
             # only undersampling
             elif pair['lower_bound'] == 1:
-                X_reduced_train, X_reduced_valid = reduce_dimension(
-                    X_train, 
-                    y_train, 
-                    X_valid, 
-                    num_features = num_comp
-                )
+                
                 X_resampled, y_resampled = under_sample(X_reduced_train, y_train, 
                                                         pair['upper_bound'])
                 clf.fit(X_resampled, y_resampled)
@@ -299,12 +296,7 @@ def grid_search(X_train, y_train,
 
             # only oversampling
             elif pair['upper_bound'] == 2134:
-                X_reduced_train, X_reduced_valid = reduce_dimension(
-                    X_train, 
-                    y_train, 
-                    X_valid, 
-                    num_features = num_comp
-                )
+                
                 X_resampled, y_resampled = over_sample(X_reduced_train, y_train, 
                                                         pair['lower_bound'])
                 clf.fit(X_resampled, y_resampled)
@@ -317,12 +309,7 @@ def grid_search(X_train, y_train,
 
             # reduce and resample
             else:
-                X_reduced_train, X_reduced_valid = reduce_dimension(
-                    X_train, 
-                    y_train, 
-                    X_valid, 
-                    num_features = num_comp
-                )
+                
                 X_resampled, y_resampled = under_sample(X_reduced_train, y_train, pair['upper_bound'])
                 X_resampled, y_resampled = over_sample(X_resampled, y_resampled, pair['lower_bound'])
 
