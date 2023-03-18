@@ -237,15 +237,18 @@ def stratified_train_test_split_df(X_train: pd.DataFrame()) -> pd.DataFrame():
 
 def grid_search(X_train, y_train, 
                 X_valid, y_valid, 
-                params: dict(), clf) -> dict():
+                params: dict(), lfda_components, clf) -> dict():
     """
     grid search for best combination of parameters:
     dimension reduction + under-sample + over-sample
 
     Parameters
     ----------
-        params (list):
-            list with triplets of parameters
+        params (dict):
+            dict with parameters for grid search
+
+        lfda_components (list):
+            number of components for lfda algorithm
 
         clf :
             estimator for searching best parameters
@@ -256,78 +259,80 @@ def grid_search(X_train, y_train,
 
     scores = dict()
 
-    for pair in tqdm(list(ParameterGrid(params))):
+    for num_comp in tqdm(lfda_components):
 
-        # no resampling
-        if pair['lower_bound'] == 1 and pair['upper_bound'] == 2134:
-            X_reduced_train, X_reduced_valid = reduce_dimension(
-                X_train, 
-                y_train, 
-                X_valid, 
-                num_features = pair['n_components']
-            )
-            clf.fit(X_resampled, y_resampled)
-            pred = clf.predict(X_reduced_valid)
-            f1 = f1_score(y_valid, pred, average='weighted')
-            scores[(pair['lower_bound'], pair['upper_bound'], 
-                    pair['n_components'])] = f1
-            print(pair, ':', f1)
-            print()
+        for pair in list(ParameterGrid(params)):
 
-        # only undersampling
-        elif pair['lower_bound'] == 1:
-            X_reduced_train, X_reduced_valid = reduce_dimension(
-                X_train, 
-                y_train, 
-                X_valid, 
-                num_features = pair['n_components']
-            )
-            X_resampled, y_resampled = under_sample(X_reduced_train, y_train, 
-                                                    pair['upper_bound'])
-            clf.fit(X_resampled, y_resampled)
-            pred = clf.predict(X_reduced_valid)
-            f1 = f1_score(y_valid, pred, average='weighted')
-            scores[(pair['lower_bound'], pair['upper_bound'], 
-                    pair['n_components'])] = f1
-            print(pair, ':', f1)
-            print()
+            # no resampling
+            if pair['lower_bound'] == 1 and pair['upper_bound'] == 2134:
+                X_reduced_train, X_reduced_valid = reduce_dimension(
+                    X_train, 
+                    y_train, 
+                    X_valid, 
+                    num_features = num_comp
+                )
+                clf.fit(X_resampled, y_resampled)
+                pred = clf.predict(X_reduced_valid)
+                f1 = f1_score(y_valid, pred, average='weighted')
+                scores[(pair['lower_bound'], pair['upper_bound'], 
+                        num_comp)] = f1
+                print(pair, ':', f1)
+                print()
 
-        # only oversampling
-        elif pair['upper_bound'] == 2134:
-            X_reduced_train, X_reduced_valid = reduce_dimension(
-                X_train, 
-                y_train, 
-                X_valid, 
-                num_features = pair['n_components']
-            )
-            X_resampled, y_resampled = over_sample(X_reduced_train, y_train, 
-                                                    pair['lower_bound'])
-            clf.fit(X_resampled, y_resampled)
-            pred = clf.predict(X_reduced_valid)
-            f1 = f1_score(y_valid, pred, average='weighted')
-            scores[(pair['lower_bound'], pair['upper_bound'], 
-                    pair['n_components'])] = f1
-            print(pair, ':', f1)
-            print()
+            # only undersampling
+            elif pair['lower_bound'] == 1:
+                X_reduced_train, X_reduced_valid = reduce_dimension(
+                    X_train, 
+                    y_train, 
+                    X_valid, 
+                    num_features = num_comp
+                )
+                X_resampled, y_resampled = under_sample(X_reduced_train, y_train, 
+                                                        pair['upper_bound'])
+                clf.fit(X_resampled, y_resampled)
+                pred = clf.predict(X_reduced_valid)
+                f1 = f1_score(y_valid, pred, average='weighted')
+                scores[(pair['lower_bound'], pair['upper_bound'], 
+                        num_comp)] = f1
+                print(pair, ':', f1)
+                print()
 
-        # reduce and resample
-        else:
-            X_reduced_train, X_reduced_valid = reduce_dimension(
-                X_train, 
-                y_train, 
-                X_valid, 
-                num_features = pair['n_components']
-            )
-            X_resampled, y_resampled = under_sample(X_reduced_train, y_train, pair['upper_bound'])
-            X_resampled, y_resampled = over_sample(X_resampled, y_resampled, pair['lower_bound'])
+            # only oversampling
+            elif pair['upper_bound'] == 2134:
+                X_reduced_train, X_reduced_valid = reduce_dimension(
+                    X_train, 
+                    y_train, 
+                    X_valid, 
+                    num_features = num_comp
+                )
+                X_resampled, y_resampled = over_sample(X_reduced_train, y_train, 
+                                                        pair['lower_bound'])
+                clf.fit(X_resampled, y_resampled)
+                pred = clf.predict(X_reduced_valid)
+                f1 = f1_score(y_valid, pred, average='weighted')
+                scores[(pair['lower_bound'], pair['upper_bound'], 
+                        num_comp)] = f1
+                print(pair, ':', f1)
+                print()
 
-            # fit and validate estimator
-            clf.fit(X_resampled, y_resampled)
-            pred = clf.predict(X_reduced_valid)
-            f1 = f1_score(y_valid, pred, average='weighted')
-            scores[(pair['lower_bound'], pair['upper_bound'], 
-                    pair['n_components'])] = f1
-            print(pair, ':', f1)
-            print()
+            # reduce and resample
+            else:
+                X_reduced_train, X_reduced_valid = reduce_dimension(
+                    X_train, 
+                    y_train, 
+                    X_valid, 
+                    num_features = num_comp
+                )
+                X_resampled, y_resampled = under_sample(X_reduced_train, y_train, pair['upper_bound'])
+                X_resampled, y_resampled = over_sample(X_resampled, y_resampled, pair['lower_bound'])
+
+                # fit and validate estimator
+                clf.fit(X_resampled, y_resampled)
+                pred = clf.predict(X_reduced_valid)
+                f1 = f1_score(y_valid, pred, average='weighted')
+                scores[(pair['lower_bound'], pair['upper_bound'], 
+                        num_comp)] = f1
+                print(pair, ':', f1)
+                print()
 
     return scores
