@@ -19,7 +19,8 @@ MAGIC_SEED = len('DS Internship 2023 | KazanExpress')
 def reduce_dimension(
     X_train: np.array,
     y_train: np.array, 
-    X_valid: np.array, 
+    X_valid: np.array,
+    X_predict: np.array,
     num_features: int = 512) -> np.array:
     """
     reduce dimension of features using Local Fisher Discriminant Analysis
@@ -36,6 +37,9 @@ def reduce_dimension(
         X_valid (np.array):
             dataset for under-sampling
 
+        X_predict (np.array):
+            dataset for under-sampling
+
         num_features (int):
             num_features for reducing
 
@@ -48,8 +52,9 @@ def reduce_dimension(
     metric_model.fit(X_train, y_train)
     X_reducted_train = metric_model.transform(X_train)
     X_reducted_valid = metric_model.transform(X_valid)
+    X_reducted_predict = metric_model.transform(X_predict)
 
-    return X_reducted_train, X_reducted_valid
+    return X_reducted_train, X_reducted_valid, X_reducted_predict
 
 def under_sample(
     X_train: np.array,
