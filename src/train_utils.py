@@ -16,7 +16,7 @@ import wandb
 import torch
 from torch.optim.lr_scheduler import StepLR
 
-def create_labels_mapping(dataset: pd.DataFrame) -> dict():
+def create_labels_mapping(dataset: pd.DataFrame()) -> dict():
     """
     create label2id and id2label dicts 
     for mapping between categories and labels
@@ -41,6 +41,8 @@ def create_labels_mapping(dataset: pd.DataFrame) -> dict():
         id2label[str(i)] = label
 
     print('Number of labels:', len(labels))
+
+    return label2id, id2label
 
 def trainer(model, train_loader, valid_loader, loss_function,
             optimizer, scheduler, cfg):
@@ -318,7 +320,12 @@ def train_pipeline(model, train_dataset, valid_dataset, cfg,
         """
 
         if saved_model is None:
+            def init_weights(m):
+                if type(m) == torch.nn.Linear:
+                    torch.nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
+            model.apply(init_weights)
             model = model.to(cfg['device'])
+
         if saved_model is not None:
             model.load_state_dict(torch.load(saved_model, map_location=torch.device(cfg['device'])))
             model = model.to(cfg['device'])
@@ -331,9 +338,9 @@ def train_pipeline(model, train_dataset, valid_dataset, cfg,
         """
 
         trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['batch_size'],
-                                                shuffle=True, num_workers=2)
+                                                  shuffle=True, num_workers=2)
         validloader = torch.utils.data.DataLoader(valid_dataset, batch_size=cfg['batch_size'],
-                                                shuffle=False, num_workers=2)
+                                                  shuffle=False, num_workers=2)
 
         criterion = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg['lr'])
