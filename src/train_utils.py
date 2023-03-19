@@ -5,6 +5,7 @@ functions for train, test and log
 import os
 import pprint
 import numpy as np
+import pandas as pd
 from typing import Literal
 from tqdm.notebook import tqdm
 
@@ -14,6 +15,32 @@ import wandb
 
 import torch
 from torch.optim.lr_scheduler import StepLR
+
+def create_labels_mapping(dataset: pd.DataFrame) -> dict():
+    """
+    create label2id and id2label dicts 
+    for mapping between categories and labels
+    Parameters
+    ----------
+        dataset (pd.DataFrame): 
+            dataframe with all content inside
+        
+    Return
+    ------
+        label2id (dict()): 
+            label <-> id mapping
+        id2label (dict()): 
+            id <-> label mapping
+    """
+
+    labels = sorted(list(set(dataset['category_id'])))
+    label2id, id2label = dict(), dict()
+
+    for i, label in enumerate(labels):
+        label2id[label] = str(i)
+        id2label[str(i)] = label
+
+    print('Number of labels:', len(labels))
 
 def trainer(model, train_loader, valid_loader, loss_function,
             optimizer, scheduler, cfg):
