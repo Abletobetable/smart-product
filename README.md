@@ -48,11 +48,11 @@ Dataset consists of products that are characterized by it's image, name, descrip
 
 The most important finding of the EDA is that the data are not balanced by class. Some classes are present in a single instance. 
 
-<img src="img/.png" alt="EDA" width="320"/>
+<img src="img/categories_distr.png" alt="EDA" width="320"/>
 
 While some fields seemingly are completely undiversified: rating and sale indicator.
 
-<img src="img/.png" alt="EDA" width="320"/>
+<img src="img/ratings_distr.png" alt="EDA" width="320"/> <img src="img/sale_distr.png" alt="EDA" width="320"/>
 
 Every image has shape (512, 512). All shops and products have titles.
 
