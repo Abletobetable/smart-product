@@ -334,13 +334,11 @@ def train_pipeline(model, train_dataset, valid_dataset, cfg,
                                                   shuffle=False, num_workers=2)
 
         criterion = torch.nn.CrossEntropyLoss()
-
-        if cfg.optimizer is 'sgd':
-            print('sgd here')
+        
+        if cfg.optimizer == 'sgd':
             optimizer = torch.optim.SGD(model.parameters(), lr=cfg.lr)
 
         else:
-            print('adam here')
             optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
 
         scheduler = StepLR(optimizer, cfg.step_size, cfg.step_gamma)
