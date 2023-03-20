@@ -306,6 +306,64 @@ def train_pipeline(model, train_dataset, valid_dataset, cfg,
         initialise model
         """
 
+        p = cfg.dropout
+
+        if cfg.num_hidden_layers == 1:
+            model = torch.nn.Sequential(
+                torch.nn.Linear(2136, 2500), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(2500), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(2500, 874))
+            
+        if cfg.num_hidden_layers == 2:
+            model = torch.nn.Sequential(
+                torch.nn.Linear(2136, 3075), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(3075), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(3075, 1024), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(1024), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(1024, 874))
+
+        if cfg.num_hidden_layers == 3:
+            model = torch.nn.Sequential(
+                torch.nn.Linear(2136, 4096), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(4096), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(4096, 2048), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(2048), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(2048, 1024), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(1024), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(1024, 874))
+
+        if cfg.num_hidden_layers == 4:
+            model = torch.nn.Sequential(
+                torch.nn.Linear(2136, 4096), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(4096), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(4096, 3075), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(3075), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(3075, 2048), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(2048), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(2048, 1024), 
+                    torch.nn.Dropout(p), 
+                    torch.nn.BatchNorm1d(1024), 
+                    torch.nn.ReLU(),
+                torch.nn.Linear(1024, 874))
+
         if saved_model is None:
             def init_weights(m):
                 if type(m) == torch.nn.Linear:
