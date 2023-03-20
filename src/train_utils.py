@@ -254,6 +254,7 @@ def tester(model, test_loader, loss_function = None,
     if loss_function is not None:
         return loss.cpu().item()/len(test_loader), F1
     else:
+        wandb.log({'test_f1': F1})
         return F1
 
 def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, cfg):
