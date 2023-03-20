@@ -78,14 +78,12 @@ For images I prepare transform pipeline before training and feature extraction: 
 I used pretrained [beit](https://huggingface.co/microsoft/beit-base-patch16-224-pt22k-ft22k) (Vision Transformer) and [EfficientNet](https://huggingface.co/timm/tf_efficientnetv2_b3.in21k_ft_in1k) for exctracting features from huggingface transfomers and timm. I also add option for finetuning models. Here are finetuned models for [beit](https://huggingface.co/abletobetable/image_feature_extractor) and [EfficientNet](https://huggingface.co/abletobetable/smart-product-EfficientNet-v1).
 
 Beit plots:
-![train loss](img/beit_train_loss.png)
-![train lr](img/beit_lr.png)
-![eval f1_score](img/beit_eval_f1_score.png)
+
+<img src="img/beit_train_loss.png" alt="drawing" width="325"/> <img src="img/beit_lr.png" alt="drawing" width="325"/> <img src="img/beit_eval_f1_score.png" alt="drawing" width="325"/>
 
 EfficientNet plots:
-![train loss](img/efficientnet_train_loss.png)
-![train lr](img/efficientnet_lr.png)
-![eval f1_score](img/efficientnet_eval_f1_score.png)
+
+<img src="img/efficientnet_train_loss.png" alt="drawing" width="325"/> <img src="img/efficientnet_lr.png" alt="drawing" width="325"/> <img src="img/efficientnet_eval_f1.png" alt="drawing" width="325"/>
 
 So, training only on images I get eval f1 score 0.61 with beit and 0.49 with EfficientNet.
 
