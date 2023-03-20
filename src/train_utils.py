@@ -96,9 +96,6 @@ def trainer(model, train_loader, valid_loader, loss_function,
     # main loop
     for e in tqdm(range(cfg['count_of_epoch']), desc='epochs'):
 
-        # train_loader = tqdm(train_loader, desc='train batches')
-        # valid_loader = tqdm(valid_loader, desc='valid batches')
-
         # train
         epoch_loss = train_epoch(train_generator=train_loader,
                                  model=model,
@@ -109,16 +106,16 @@ def trainer(model, train_loader, valid_loader, loss_function,
         # validation
         valid_loss = 0.0
         model.eval()
-        valid_loss, valid_f1 = tester(model=model, 
+        valid_loss, valid_f1 = tester(model=model,
                                         test_loader=valid_loader,
-                                        loss_function=loss_function, 
+                                        loss_function=loss_function,
                                         device=cfg['device'])
 
         scheduler.step()
 
         # log things
         trainer_log(epoch_loss, valid_loss, valid_f1, e,
-                    optimizer.param_groups[0]['lr'], min_valid_loss, cfg)
+                    optimizer.param_groups[0]['lr'], cfg)
 
         # saving models
         if min_valid_loss > valid_loss:
@@ -158,7 +155,7 @@ def train_epoch(train_generator, model,
     """
     epoch_loss = 0
     total = 0
-    for it, batch in enumerate(tqdm(train_generator)):
+    for batch in train_generator:
         batch_loss = train_on_batch(model,
                                     batch['pixel_values'], batch['label'],
                                     optimizer, loss_function, device)
@@ -238,7 +235,7 @@ def tester(model, test_loader, loss_function = None, print_stats=False, device='
     real = []
     loss = 0
     model.eval()
-    for it, batch in enumerate(tqdm(test_loader)):
+    for batch in test_loader:
 
         x_batch = batch['pixel_values'].to(device)
         with torch.no_grad():
@@ -260,7 +257,7 @@ def tester(model, test_loader, loss_function = None, print_stats=False, device='
     else:
         return F1
 
-def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, min_val_loss, cfg):
+def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, cfg):
     """
     make logging
     """
@@ -343,13 +340,20 @@ def train_pipeline(model, train_dataset, valid_dataset, cfg,
                                                   shuffle=False, num_workers=2)
 
         criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=cfg['lr'])
+
+        if cfg['optimizer'] is 'adam':
+            optimizer = torch.optim.Adam(model.parameters(), lr=cfg['lr'])
+
+        if cfg['optimizer'] is 'sgd':
+            optimizer = torch.optim.SGD(model.parameters(), lr=cfg['lr'])
+
         scheduler = StepLR(optimizer, cfg['step_size'], cfg['step_gamma'])
 
         return trainloader, validloader, criterion, optimizer, scheduler
 
     if report_to == 'wandb':
         run = wandb.init(project=cfg['project'], config=cfg)
+        cfg = run.config
         cfg['report_to'] = 'wandb'
 
     # pretty print dict()
