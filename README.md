@@ -117,6 +117,7 @@ I also transform my data with [LFDA](http://contrib.scikit-learn.org/metric-lear
 Using ParameterGrid from sklearn I searched for best combination of upper bound (undersampling), lower bound (oversampling) and dimension after LFDA. Best f1 score: 0.8627 was on validation using KNeighborsClassifier with no undersampling, oversampling up to 16 objects in each class and no reduction but with transform in 2134 dimension.
 
 ### Final classificator model
+(notebooks/MLModel_kazan2023.ipynb, notebooks/NNClassifier_kazan2023.ipynb)
 
 For final model I tried KNeighborsClassifier with data resampling and transformation: f1_score = 0.8627. 
 
@@ -150,7 +151,7 @@ So best params with smaller learning rate, with and bigger dropout.
 
 For inference model I choose:
 
-    epochs = 50
+    epochs = 100
     batch_size = 4096
     lr = 0.00103
     dropout = 0.5
@@ -160,7 +161,7 @@ For inference model I choose:
     step_size = 25
     step_gamma = 0.2
 
-❗️ Best f1 score weighted: INSERT_SCORE
+❗️ Best f1 score weighted: 0.8752
 
 ## How to improve?
 And what could be done more:
