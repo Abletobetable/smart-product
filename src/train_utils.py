@@ -84,8 +84,7 @@ def trainer(model, train_loader, valid_loader, loss_function,
             learning rate scheduler for optimizer
     """
 
-    if cfg['report_to'] == 'wandb':
-        wandb.watch(model, loss_function, log="all", log_freq=10)
+    wandb.watch(model, loss_function, log="all", log_freq=10)
 
     min_valid_loss = np.inf
 
@@ -123,9 +122,8 @@ def trainer(model, train_loader, valid_loader, loss_function,
             min_valid_loss = valid_loss
             torch.save(model.state_dict(),
                        f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth')
-            if cfg['report_to'] == 'wandb':
-                wandb.log_artifact(f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth',
-                                   name=f'saved_model_{e}', type='model')
+            wandb.log_artifact(f'/content/model_weights/{cfg["model_name"]}/saved_model_{e}.pth',
+                                name=f'saved_model_{e}', type='model')
         print()
 
 def train_epoch(train_generator, model,
@@ -262,13 +260,11 @@ def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, cfg):
     """
     make logging
     """
-
-    if cfg['report_to'] == 'wandb':
-        wandb.log({'train_loss': train_loss,
-                   'valid_loss': valid_loss,
-                   'valid_f1': valid_f1, 
-                   'epoch': epoch, 
-                   'learning_rate': lr})
+    wandb.log({'train_loss': train_loss,
+                'valid_loss': valid_loss,
+                'valid_f1': valid_f1, 
+                'epoch': epoch, 
+                'learning_rate': lr})
 
     print(f'train loss on {str(epoch).zfill(3)} epoch: {train_loss:.6f} with lr: {lr:.10f}')
     print(f'valid loss on {str(epoch).zfill(3)} epoch: {valid_loss:.6f}')
