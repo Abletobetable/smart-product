@@ -101,7 +101,7 @@ def trainer(model, train_loader, valid_loader, loss_function,
                                  model=model,
                                  loss_function=loss_function,
                                  optimizer=optimizer,
-                                 device=cfg['device'])
+                                 device=os.environ['device'])
 
         # validation
         valid_loss = 0.0
@@ -109,7 +109,7 @@ def trainer(model, train_loader, valid_loader, loss_function,
         valid_loss, valid_f1 = tester(model=model,
                                         test_loader=valid_loader,
                                         loss_function=loss_function,
-                                        device=cfg['device'])
+                                        device=os.environ['device'])
 
         scheduler.step()
 
@@ -203,7 +203,8 @@ def train_on_batch(model, x_batch, y_batch,
     optimizer.step()
     return loss.cpu().item()
 
-def tester(model, test_loader, loss_function = None, print_stats=False, device='cpu'):
+def tester(model, test_loader, loss_function = None, 
+           print_stats=False, device='cpu'):
     """
 
     testing or validating on provided dataset
@@ -274,8 +275,7 @@ def trainer_log(train_loss, valid_loss, valid_f1, epoch, lr, cfg):
     print(f'valid f1 score: {valid_f1:.2f}')
 
 def train_pipeline(model, train_dataset, valid_dataset, cfg,
-             saved_model=None, to_train=True, to_test=True,
-             report_to=Literal['local', 'wandb']):
+                   saved_model=None, to_train=True, to_test=True):
     """
     run training and/or testing process
 
@@ -290,9 +290,6 @@ def train_pipeline(model, train_dataset, valid_dataset, cfg,
         test_dataset:
             dataset for testing or validating
 
-        cdf (dict()):
-            config with params for training and testing
-
         saved_model:
             path to saved checkpoint to resume training
             or to test saved model
@@ -303,15 +300,12 @@ def train_pipeline(model, train_dataset, valid_dataset, cfg,
         to_test (bool):
             if True test, else only train
 
-        report_to ('local', 'wandb'):
-            where to log and save artifacts
-
     Return
     ------
         trained or tested model
     """
 
-    def build_model(model, cfg, saved_model=None):
+    def build_model(model, saved_model=None):
         """
         initialise model
         """
@@ -319,64 +313,66 @@ def train_pipeline(model, train_dataset, valid_dataset, cfg,
         if saved_model is None:
             def init_weights(m):
                 if type(m) == torch.nn.Linear:
-                    torch.nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
+                    torch.nn.init.kaiming_normal_(m.weight, mode='fan_in', 
+                                                  nonlinearity='relu')
             model.apply(init_weights)
-            model = model.to(cfg['device'])
+            model = model.to(os.environ['device'])
 
         if saved_model is not None:
-            model.load_state_dict(torch.load(saved_model, map_location=torch.device(cfg['device'])))
-            model = model.to(cfg['device'])
+            model.load_state_dict(torch.load(saved_model, 
+                                  map_location=torch.device(os.environ['device'])))
+            model = model.to(os.environ['device'])
 
         return model
 
-    def make(model, train_dataset, valid_dataset, cfg):
+    def make(model, train_dataset, valid_dataset):
         """
         make dataloaders, init optimizers and criterions
         """
 
-        trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg['batch_size'],
+        trainloader = torch.utils.data.DataLoader(train_dataset, 
+                                                  batch_size=cfg.batch_size,
                                                   shuffle=True, num_workers=2)
-        validloader = torch.utils.data.DataLoader(valid_dataset, batch_size=cfg['batch_size'],
+        validloader = torch.utils.data.DataLoader(valid_dataset, 
+                                                  batch_size=cfg.batch_size,
                                                   shuffle=False, num_workers=2)
 
         criterion = torch.nn.CrossEntropyLoss()
 
-        if cfg['optimizer'] is 'adam':
-            optimizer = torch.optim.Adam(model.parameters(), lr=cfg['lr'])
+        if cfg.optimizer is 'sgd':
+            print('sgd here')
+            optimizer = torch.optim.SGD(model.parameters(), lr=cfg.lr)
 
-        if cfg['optimizer'] is 'sgd':
-            optimizer = torch.optim.SGD(model.parameters(), lr=cfg['lr'])
+        else:
+            print('adam here')
+            optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
 
-        scheduler = StepLR(optimizer, cfg['step_size'], cfg['step_gamma'])
+        scheduler = StepLR(optimizer, cfg.step_size, cfg.step_gamma)
 
         return trainloader, validloader, criterion, optimizer, scheduler
-
-    if report_to == 'wandb':
-        run = wandb.init(project=cfg['project'], config=cfg)
-        cfg = run.config
-        cfg['report_to'] = 'wandb'
 
     # pretty print dict()
     pretty_print = pprint.PrettyPrinter()
 
+    print('config:')
+    pretty_print.pprint(cfg)
+    print()
+    print('running on device:', os.environ['device'], '\n')
+
     # build the model
-    model = build_model(model, cfg, saved_model)
+    model = build_model(model, saved_model)
 
     # data and optimization
     trainloader, validloader,  \
         criterion, optimizer, scheduler = make(model, train_dataset,
-                                               valid_dataset, cfg)
-
-    print('config:')
-    pretty_print.pprint(cfg)
-    print()
-    print('running on device:', cfg['device'], '\n')
+                                               valid_dataset)
 
     if to_train:
         trainer(model, trainloader, validloader,
                 criterion, optimizer, scheduler, cfg)
 
     if to_test:
-        tester(model, validloader, print_stats=True, device=cfg['device'])
+        tester(model, validloader, print_stats=True, 
+                device=os.environ['device'])
 
     return model
