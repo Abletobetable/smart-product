@@ -166,22 +166,36 @@ For inference model I choose:
 ## How to improve?
 And what could be done more:
 
-    - more features to final dataset 📖:
-    Add columns such as sale, ratings. Search for some patterns text fields, parse dict-like columns for more informative features.
-    - train more:
-    training main feature exctractors (beit and bert) for more epochs, but not just couple, sure make score even higher!
-    - adapters:
-    add adapters in beit and bert for efficient finetuning and better results
-    - multimodal learning:
-    make model that can handle images and text at the same time, this might require more computing power
-    - metric learning:
-    add metric learning in training process by adding metric learning loss, for example using [PML](https://github.com/KevinMusgrave/pytorch-metric-learning).
-    - oversampling:
-    try other more powerful technics for oversampling, for example, SMOTE or ADASYN.
-    - weights for classes:
-    apply bigger weights for hard classes to CrossEntropyLoss for more efficient training
-    - train again and again 🤹:
-    add more params to wandb sweep for auto search for perfect hyperparameters, for example, batch normalisation and bigger dropout values, and execute more runs.
+- more features to final dataset 📖:
+
+Add columns such as sale, ratings. Search for some patterns text fields, parse dict-like columns for more informative features.
+- train more:
+
+training main feature exctractors (beit and bert) for more epochs, but not just couple, sure make score even higher!
+
+- adapters:
+
+add adapters in beit and bert for efficient finetuning and better results
+
+- multimodal learning:
+
+make model that can handle images and text at the same time, this might require more computing power
+
+- metric learning:
+
+add metric learning in training process by adding metric learning loss, for example using [PML](https://github.com/KevinMusgrave/pytorch-metric-learning).
+
+- oversampling:
+
+try other more powerful technics for oversampling, for example, SMOTE or ADASYN.
+
+- weights for classes:
+
+apply bigger weights for hard classes to CrossEntropyLoss for more efficient training
+
+- train again and again 🤹:
+
+add more params to wandb sweep for auto search for perfect hyperparameters, for example, batch normalisation and bigger dropout values, and execute more runs.
 
 # Feel free to contact with me:
 
