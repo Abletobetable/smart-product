@@ -199,7 +199,7 @@ apply bigger weights for hard classes to CrossEntropyLoss for more efficient tra
 
 add more params to wandb sweep for auto search for perfect hyperparameters, for example, batch normalisation and bigger dropout values, and execute more runs.
 
-# Feel free to contact with me:
+## Feel free to contact with me:
 
 https://t.me/abletobetable
 
