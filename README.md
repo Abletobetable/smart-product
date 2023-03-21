@@ -19,6 +19,8 @@ Predict category of product by it's description, image and other attributes.
 
 ## Proposed solution 🚳:
 
+<img src="img/Concept_kazan2023.png" alt="map" width="500"/>
+
 0. [EDA](#Exploratory-data-analysis) to know the data
 
 1. [Preprocessing dataset](#preprocessing)
@@ -133,19 +135,19 @@ On the first sweeep run I noticed that Adam optimizer works always better than S
 
 first sweep run:
 
-<img src="img/sweep1_net.png" alt="sweeps" width="500"/>
+<img src="img/sweep1_net.png" alt="sweeps" width="600"/>
 <img src="img/sweep1_table.png" alt="sweeps" width="500"/>
 
 Main sweep run:
 
-<img src="img/sweep2_net.png" alt="sweeps" width="500"/>
-<img src="img/sweep2_dots.png" alt="sweeps" width="500"/>
+<img src="img/sweep2_net.png" alt="sweeps" width="600"/>
+<img src="img/sweep2_dots.png" alt="sweeps" width="600"/>
 <img src="img/sweep2_table.png" alt="sweeps" width="500"/>
 
 Zoom to best results:
 
-<img src="img/sweep2_net_zoomed.png" alt="sweeps" width="500"/>
-<img src="img/sweep2_dots_zoomed.png" alt="sweeps" width="500"/>
+<img src="img/sweep2_net_zoomed.png" alt="sweeps" width="600"/>
+<img src="img/sweep2_dots_zoomed.png" alt="sweeps" width="600"/>
 
 So best params with smaller learning rate, with and bigger dropout. 
 
